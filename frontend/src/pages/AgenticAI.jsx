@@ -15,8 +15,11 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  IconButton,
-  Paper
+  Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import {
   SmartToy,
@@ -25,50 +28,62 @@ import {
   Psychology,
   Analytics,
   TrendingUp,
-  Code,
+  Description,
+  Campaign,
   Refresh
 } from '@mui/icons-material';
 
 const AgenticAI = () => {
   const [prompt, setPrompt] = useState('');
+  const [selectedAgent, setSelectedAgent] = useState('market-analyst');
   const [conversation, setConversation] = useState([
-    { role: 'ai', content: 'Hello! I\'m your AI financial analyst. How can I assist you with market analysis, investment strategies, or data interpretation today?' }
+    { 
+      role: 'ai', 
+      content: 'Hello! I\'m your AFH AI assistant. I can help you with market analysis, outreach strategies, proposal generation, and competitive intelligence for the Away-From-Home channel. How can I assist you today?' 
+    }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const aiAgents = [
     {
-      id: 1,
+      id: 'market-analyst',
       name: 'Market Analyst',
-      description: 'Analyzes market trends and identifies opportunities',
+      description: 'Analyzes AFH market trends and identifies account opportunities',
       status: 'active',
-      capabilities: ['Trend Analysis', 'Pattern Recognition', 'Market Forecasting'],
+      capabilities: ['Trend Analysis', 'Account Identification', 'Market Forecasting'],
       avatar: <TrendingUp />
     },
     {
-      id: 2,
-      name: 'Risk Assessor',
-      description: 'Evaluates investment risks and provides mitigation strategies',
+      id: 'outreach-generator',
+      name: 'Outreach Generator',
+      description: 'Creates personalized outreach and proposal content',
       status: 'active',
-      capabilities: ['Risk Scoring', 'Portfolio Analysis', 'Stress Testing'],
+      capabilities: ['Proposal Drafting', 'Email Templates', 'Pitch Decks'],
+      avatar: <Campaign />
+    },
+    {
+      id: 'competitive-intel',
+      name: 'Competitive Intelligence',
+      description: 'Monitors competitor activities and market positioning',
+      status: 'active',
+      capabilities: ['Competitor Tracking', 'Price Analysis', 'Win/Loss Analysis'],
       avatar: <Analytics />
     },
     {
-      id: 3,
-      name: 'Strategy Generator',
-      description: 'Creates optimized investment strategies based on goals',
+      id: 'strategy-advisor',
+      name: 'Strategy Advisor',
+      description: 'Recommends AFH channel strategies and playbooks',
       status: 'developing',
-      capabilities: ['Strategy Formulation', 'Backtesting', 'Optimization'],
+      capabilities: ['Strategy Formulation', 'Playbook Recommendations', 'Performance Optimization'],
       avatar: <Psychology />
-    },
-    {
-      id: 4,
-      name: 'Code Interpreter',
-      description: 'Analyzes and executes financial models and algorithms',
-      status: 'active',
-      capabilities: ['Python Execution', 'Data Analysis', 'Model Validation'],
-      avatar: <Code />
     }
+  ];
+
+  const quickPrompts = [
+    'Analyze QSR beverage trends in Northeast region',
+    'Draft outreach email for hotel chain partnership',
+    'Competitive analysis of energy drink placements',
+    'Generate proposal for campus dining contract'
   ];
 
   const handleSendMessage = async () => {
@@ -79,15 +94,31 @@ const AgenticAI = () => {
     setPrompt('');
     setIsProcessing(true);
 
-    // Simulate AI response
+    // Simulate AI response based on selected agent
     setTimeout(() => {
-      const aiResponse = {
-        role: 'ai',
-        content: `I've analyzed your query about "${prompt}". Based on current market data and historical trends, I recommend considering diversified exposure to emerging technologies while maintaining defensive positions in stable sectors. The current volatility suggests a balanced approach with 60% growth assets and 40% defensive holdings.`
-      };
+      let aiResponse = { role: 'ai', content: '' };
+      
+      switch(selectedAgent) {
+        case 'market-analyst':
+          aiResponse.content = `Based on current AFH market data, I'm seeing strong growth opportunities in the QSR channel for premium beverage placements. The Northeast region shows 15% YOY growth in beverage sales, with particular strength in cold brew and functional beverages. I recommend focusing on accounts with recent menu refreshes.`;
+          break;
+        case 'outreach-generator':
+          aiResponse.content = `I've drafted a personalized outreach email for hotel chain partnerships. The template emphasizes your premium portfolio and includes data-driven insights about mini-bar performance. Would you like me to customize it further for specific chains like Hilton or Marriott?`;
+          break;
+        case 'competitive-intel':
+          aiResponse.content = `Competitor analysis shows Coca-Cola gaining 3% market share in workplace channels through new wellness initiatives. PepsiCo maintains strong QSR presence but shows vulnerability in the education segment. Key opportunity: leverage your healthier beverage portfolio in workplace and education channels.`;
+          break;
+        default:
+          aiResponse.content = `I've analyzed your query about "${prompt}". Based on AFH channel data and current market conditions, I recommend a focused approach combining data-driven insights with personalized outreach strategies.`;
+      }
+      
       setConversation(prev => [...prev, aiResponse]);
       setIsProcessing(false);
     }, 2000);
+  };
+
+  const handleQuickPrompt = (quickPrompt) => {
+    setPrompt(quickPrompt);
   };
 
   const handleKeyPress = (e) => {
@@ -97,13 +128,15 @@ const AgenticAI = () => {
     }
   };
 
+  const currentAgent = aiAgents.find(agent => agent.id === selectedAgent);
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Agentic AI Assistant
+        Agentic AI for Sales & Account Teams
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Intelligent AI agents working together to provide comprehensive financial analysis
+        AI-powered tools for targeting, outreach, proposal generation, and competitive intelligence
       </Typography>
 
       <Grid container spacing={3}>
@@ -113,43 +146,57 @@ const AgenticAI = () => {
               <Typography variant="h6" gutterBottom>
                 AI Agents
               </Typography>
-              <List>
-                {aiAgents.map((agent) => (
-                  <ListItem key={agent.id} divider>
-                    <ListItemIcon>
-                      <Avatar sx={{ bgcolor: agent.status === 'active' ? 'success.main' : 'warning.main' }}>
-                        {agent.avatar}
-                      </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {agent.name}
-                          <Chip 
-                            label={agent.status} 
-                            size="small" 
-                            color={agent.status === 'active' ? 'success' : 'warning'}
-                          />
-                        </Box>
-                      }
-                      secondary={agent.description}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Select Agent</InputLabel>
+                <Select
+                  value={selectedAgent}
+                  label="Select Agent"
+                  onChange={(e) => setSelectedAgent(e.target.value)}
+                >
+                  {aiAgents.map((agent) => (
+                    <MenuItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Active Analysis
+              {currentAgent && (
+                <Card variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                        {currentAgent.avatar}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle1">{currentAgent.name}</Typography>
+                        <Chip 
+                          label={currentAgent.status} 
+                          size="small" 
+                          color={currentAgent.status === 'active' ? 'success' : 'warning'}
+                        />
+                      </Box>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {currentAgent.description}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {currentAgent.capabilities.map((capability, index) => (
+                        <Chip key={index} label={capability} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Typography variant="subtitle2" gutterBottom>
+                Active Tasks
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {[
                   { task: 'Market Trend Analysis', progress: 75, agent: 'Market Analyst' },
-                  { task: 'Portfolio Risk Assessment', progress: 40, agent: 'Risk Assessor' },
-                  { task: 'Investment Strategy Optimization', progress: 90, agent: 'Strategy Generator' }
+                  { task: 'Proposal Generation', progress: 40, agent: 'Outreach Generator' },
+                  { task: 'Competitive Monitoring', progress: 90, agent: 'Competitive Intelligence' }
                 ].map((analysis, index) => (
                   <Box key={index}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -169,13 +216,35 @@ const AgenticAI = () => {
               </Box>
             </CardContent>
           </Card>
+
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button variant="outlined" startIcon={<Description />}>
+                  Generate Proposal
+                </Button>
+                <Button variant="outlined" startIcon={<Campaign />}>
+                  Draft Outreach Email
+                </Button>
+                <Button variant="outlined" startIcon={<Analytics />}>
+                  Competitive Analysis
+                </Button>
+                <Button variant="outlined" startIcon={<TrendingUp />}>
+                  Market Report
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
         <Grid item xs={12} md={8}>
           <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
-                AI Conversation
+                AI Conversation - {currentAgent?.name}
               </Typography>
               
               <Paper 
@@ -201,7 +270,7 @@ const AgenticAI = () => {
                       </Avatar>
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                          {message.role === 'ai' ? 'AI Assistant' : 'You'}
+                          {message.role === 'ai' ? `${currentAgent?.name} AI` : 'You'}
                         </Typography>
                         <Paper 
                           variant="outlined" 
@@ -239,7 +308,7 @@ const AgenticAI = () => {
                   fullWidth
                   multiline
                   maxRows={3}
-                  placeholder="Ask about market trends, investment strategies, or data analysis..."
+                  placeholder={`Ask ${currentAgent?.name} about AFH strategies, market trends, or outreach...`}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -260,17 +329,12 @@ const AgenticAI = () => {
                 <Typography variant="body2" color="text.secondary">
                   Quick prompts:
                 </Typography>
-                {[
-                  'Analyze tech sector trends',
-                  'Portfolio risk assessment',
-                  'Generate investment strategy',
-                  'Market volatility forecast'
-                ].map((quickPrompt, index) => (
+                {quickPrompts.map((quickPrompt, index) => (
                   <Chip
                     key={index}
                     label={quickPrompt}
                     size="small"
-                    onClick={() => setPrompt(quickPrompt)}
+                    onClick={() => handleQuickPrompt(quickPrompt)}
                     variant="outlined"
                   />
                 ))}
