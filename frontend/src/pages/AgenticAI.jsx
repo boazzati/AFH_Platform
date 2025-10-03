@@ -135,7 +135,54 @@ const handleGenerateEmail = async () => {
     console.error('Email Generation Error:', error);
   }
 };
+const handleGenerateProposal = async () => {
+  setIsProcessing(true);
+  try {
+    const response = await aiAPI.generatePlaybook({
+      channels: selectedChannels.map(ch => ch.name),
+      accountType: 'New Account Acquisition',
+      objectives: 'Increase market share in premium beverage segment'
+    });
+    
+    const aiResponse = {
+      role: 'ai',
+      content: `**Generated Strategy Proposal:**\n\n${response.data.strategy}`
+    };
+    
+    setConversation(prev => [...prev, aiResponse]);
+  } catch (error) {
+    console.error('Proposal Generation Error:', error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
+const handleAnalyzeTrends = async () => {
+  setIsProcessing(true);
+  try {
+    const marketData = {
+      qsrGrowth: 15.2,
+      workplaceExpansion: 8.7,
+      premiumPlacements: 12.1
+    };
+    
+    const response = await aiAPI.analyzeTrends({
+      data: marketData,
+      channel: 'All Channels'
+    });
+    
+    const aiResponse = {
+      role: 'ai',
+      content: `**Market Trend Analysis:**\n\n${response.data.analysis}`
+    };
+    
+    setConversation(prev => [...prev, aiResponse]);
+  } catch (error) {
+    console.error('Trend Analysis Error:', error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
     // Simulate AI response based on selected agent
     setTimeout(() => {
       let aiResponse = { role: 'ai', content: '' };
