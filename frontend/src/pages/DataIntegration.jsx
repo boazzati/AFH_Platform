@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import {
   CloudUpload,
-  Database,
+  Storage, // Changed from Database to Storage
   Api,
   CheckCircle,
   Error,
@@ -185,7 +185,7 @@ const DataIntegration = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {[
                   { name: 'Financial APIs', icon: <Api />, count: 12 },
-                  { name: 'Databases', icon: <Database />, count: 8 },
+                  { name: 'Databases', icon: <Storage />, count: 8 }, {/* Changed from Database to Storage */}
                   { name: 'Cloud Storage', icon: <CloudUpload />, count: 6 },
                   { name: 'Custom APIs', icon: <Add />, count: 'Unlimited' }
                 ].map((connector, index) => (
