@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Box } from '@mui/material';
+
+// Import components
 import Dashboard from './pages/Dashboard';
 import MarketMapping from './pages/MarketMapping';
 import PlaybookGenerator from './pages/PlaybookGenerator';
@@ -11,19 +13,30 @@ import DataIntegration from './pages/DataIntegration';
 import ExpertNetwork from './pages/ExpertNetwork';
 import AgenticAI from './pages/AgenticAI';
 import Benchmarking from './pages/Benchmarking';
-import './App.css';
+
+// Navigation component
+import Navigation from './components/Navigation';
+
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <main className="lg:ml-64">
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box sx={{ display: 'flex' }}>
+          <Navigation />
+          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/market-mapping" element={<MarketMapping />} />
@@ -34,12 +47,10 @@ function App() {
               <Route path="/agentic-ai" element={<AgenticAI />} />
               <Route path="/benchmarking" element={<Benchmarking />} />
             </Routes>
-          </div>
-        </main>
-        
-        <Toaster position="top-right" />
-      </div>
-    </Router>
+          </Box>
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
 }
 
