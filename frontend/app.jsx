@@ -1,4 +1,3 @@
-const response = await fetch('/api/proxy', {
 const startAnalysis = async () => {
   setIsAnalyzing(true)
   setAnalysisProgress(0)
