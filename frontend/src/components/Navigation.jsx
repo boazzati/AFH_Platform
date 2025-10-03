@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 import {
   Dashboard,
-  Assessment,
+  Map,
   PlayArrow,
-  TrendingUp,
+  TrackChanges,
   IntegrationInstructions,
   Groups,
   SmartToy,
@@ -20,13 +20,13 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const drawerWidth = 240;
+const drawerWidth = 280;
 
 const menuItems = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-  { text: 'Market Mapping', icon: <Assessment />, path: '/market-mapping' },
+  { text: 'AFH Dashboard', icon: <Dashboard />, path: '/' },
+  { text: 'Market Mapping', icon: <Map />, path: '/market-mapping' },
   { text: 'Playbook Generator', icon: <PlayArrow />, path: '/playbook-generator' },
-  { text: 'Execution Engine', icon: <TrendingUp />, path: '/execution-engine' },
+  { text: 'Execution Engine', icon: <TrackChanges />, path: '/execution-engine' },
   { text: 'Data Integration', icon: <IntegrationInstructions />, path: '/data-integration' },
   { text: 'Expert Network', icon: <Groups />, path: '/expert-network' },
   { text: 'Agentic AI', icon: <SmartToy />, path: '/agentic-ai' },
@@ -45,6 +45,7 @@ const Navigation = () => {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
+          backgroundColor: '#f5f5f5'
         },
       }}
       variant="permanent"
@@ -52,7 +53,7 @@ const Navigation = () => {
     >
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-          AI Finance Platform
+          AFH Accelerator
         </Typography>
       </Toolbar>
       <List>
@@ -62,6 +63,15 @@ const Navigation = () => {
             key={item.text}
             onClick={() => navigate(item.path)}
             selected={location.pathname === item.path}
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'primary.main',
+                color: 'white',
+                '& .MuiListItemIcon-root': {
+                  color: 'white'
+                }
+              }
+            }}
           >
             <ListItemIcon>
               {item.icon}
