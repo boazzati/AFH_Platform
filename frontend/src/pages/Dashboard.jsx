@@ -9,8 +9,9 @@ import {
 } from '@mui/material';
 import {
   TrendingUp,
-  Assessment,
+  Map,
   PlayArrow,
+  TrackChanges,
   IntegrationInstructions,
   Groups,
   SmartToy,
@@ -20,50 +21,50 @@ import {
 const Dashboard = () => {
   const modules = [
     {
-      title: 'Market Mapping',
-      description: 'Analyze market trends and company performance',
-      icon: <Assessment sx={{ fontSize: 40 }} />,
+      title: 'AFH Market Mapping',
+      description: 'Dynamic mapping of restaurant openings, menu trends, and channel opportunities',
+      icon: <Map sx={{ fontSize: 40 }} />,
       path: '/market-mapping',
       color: '#1976d2'
     },
     {
-      title: 'Playbook Generator',
-      description: 'Create investment strategies and playbooks',
+      title: 'Commercial Playbook Generator',
+      description: 'AI-generated playbooks for QSR, workplace, leisure channels',
       icon: <PlayArrow sx={{ fontSize: 40 }} />,
       path: '/playbook-generator',
       color: '#2e7d32'
     },
     {
       title: 'Execution Engine',
-      description: 'Automated trade execution and monitoring',
-      icon: <TrendingUp sx={{ fontSize: 40 }} />,
+      description: 'Track pitches, pilots, launches with closed-loop feedback',
+      icon: <TrackChanges sx={{ fontSize: 40 }} />,
       path: '/execution-engine',
       color: '#ed6c02'
     },
     {
-      title: 'Data Integration',
-      description: 'Connect and analyze multiple data sources',
+      title: 'Operator Data Integration',
+      description: 'POS, menu data, and CRM integration for real-time insights',
       icon: <IntegrationInstructions sx={{ fontSize: 40 }} />,
       path: '/data-integration',
       color: '#9c27b0'
     },
     {
       title: 'Expert Network',
-      description: 'Access industry experts and insights',
+      description: 'On-demand AFH experts and peer consultations',
       icon: <Groups sx={{ fontSize: 40 }} />,
       path: '/expert-network',
       color: '#d32f2f'
     },
     {
-      title: 'Agentic AI',
-      description: 'AI-powered analysis and recommendations',
+      title: 'Agentic AI Assistant',
+      description: 'AI-powered targeting, outreach, and proposal generation',
       icon: <SmartToy sx={{ fontSize: 40 }} />,
       path: '/agentic-ai',
       color: '#0288d1'
     },
     {
-      title: 'Benchmarking',
-      description: 'Compare performance against benchmarks',
+      title: 'Performance Benchmarking',
+      description: 'Cross-market performance and competitive win analysis',
       icon: <Analytics sx={{ fontSize: 40 }} />,
       path: '/benchmarking',
       color: '#7b1fa2'
@@ -73,10 +74,10 @@ const Dashboard = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        AI Financial Platform Dashboard
+        AFH Channel Acceleration Platform
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Comprehensive tools for investment analysis and execution
+        AI-powered tools to accelerate Away-From-Home channel growth for CPG
       </Typography>
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
