@@ -86,13 +86,55 @@ const AgenticAI = () => {
     'Generate proposal for campus dining contract'
   ];
 
-  const handleSendMessage = async () => {
-    if (!prompt.trim()) return;
+const handleSendMessage = async () => {
+  if (!prompt.trim()) return;
 
-    const userMessage = { role: 'user', content: prompt };
-    setConversation(prev => [...prev, userMessage]);
-    setPrompt('');
-    setIsProcessing(true);
+  const userMessage = { role: 'user', content: prompt };
+  setConversation(prev => [...prev, userMessage]);
+  setPrompt('');
+  setIsProcessing(true);
+
+  try {
+    const response = await aiAPI.chat({
+      prompt,
+      context: `User is asking about AFH channel strategies. Current agent: ${currentAgent?.name}`,
+      agentType: selectedAgent
+    });
+
+    const aiResponse = {
+      role: 'ai',
+      content: response.data.response
+    };
+    
+    setConversation(prev => [...prev, aiResponse]);
+  } catch (error) {
+    console.error('AI Chat Error:', error);
+    const errorResponse = {
+      role: 'ai',
+      content: 'I apologize, but I encountered an error processing your request. Please try again.'
+    };
+    setConversation(prev => [...prev, errorResponse]);
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+// Add new function for quick actions
+const handleGenerateEmail = async () => {
+  try {
+    const response = await aiAPI.generateEmail({
+      account: 'Sample Hotel Chain',
+      channel: 'Leisure',
+      context: 'Premium beverage partnership for mini-bar placement'
+    });
+    
+    // Open email in dialog or new section
+    console.log('Generated Email:', response.data.email);
+    alert('Email generated! Check console for details.');
+  } catch (error) {
+    console.error('Email Generation Error:', error);
+  }
+};
 
     // Simulate AI response based on selected agent
     setTimeout(() => {
