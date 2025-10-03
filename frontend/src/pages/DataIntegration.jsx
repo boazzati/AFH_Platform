@@ -32,15 +32,45 @@ import {
   Error,
   Pending,
   Add,
-  Cancel
+  PointOfSale,
+  MenuBook,
+  Group
 } from '@mui/icons-material';
 
 const DataIntegration = () => {
   const [dataSources, setDataSources] = useState([
-    { id: 1, name: 'Bloomberg Terminal', type: 'API', status: 'connected', lastSync: '2 hours ago' },
-    { id: 2, name: 'Reuters Data', type: 'API', status: 'connected', lastSync: '1 hour ago' },
-    { id: 3, name: 'SEC EDGAR', type: 'Web Scraping', status: 'pending', lastSync: 'Never' },
-    { id: 4, name: 'Internal CRM', type: 'Database', status: 'error', lastSync: '5 days ago' },
+    { 
+      id: 1, 
+      name: 'POS System - NCR Aloha', 
+      type: 'POS Data', 
+      status: 'connected', 
+      lastSync: '2 hours ago',
+      coverage: '85% of QSR accounts'
+    },
+    { 
+      id: 2, 
+      name: 'Operator CRM', 
+      type: 'CRM', 
+      status: 'connected', 
+      lastSync: '1 hour ago',
+      coverage: 'All enterprise accounts'
+    },
+    { 
+      id: 3, 
+      name: 'Digital Menu Scraping', 
+      type: 'Web Data', 
+      status: 'pending', 
+      lastSync: 'Never',
+      coverage: 'Major chain restaurants'
+    },
+    { 
+      id: 4, 
+      name: 'Consumer Feedback Stream', 
+      type: 'Survey Data', 
+      status: 'error', 
+      lastSync: '5 days ago',
+      coverage: 'Mobile app users'
+    },
   ]);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,6 +80,13 @@ const DataIntegration = () => {
     endpoint: '',
     credentials: ''
   });
+
+  const dataStreams = [
+    { name: 'Real-time POS', value: '2.4M', trend: '+12%', description: 'Transactions processed today' },
+    { name: 'Menu Updates', value: '156', trend: '+8', description: 'Menu changes detected' },
+    { name: 'Consumer Reviews', value: '8.2K', trend: '+234', description: 'New reviews analyzed' },
+    { name: 'Competitor Pricing', value: '98%', trend: '+5%', description: 'Price coverage accuracy' }
+  ];
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -69,31 +106,23 @@ const DataIntegration = () => {
     }
   };
 
-  const handleAddSource = () => {
-    const newDataSource = {
-      id: dataSources.length + 1,
-      name: newSource.name,
-      type: newSource.type,
-      status: 'pending',
-      lastSync: 'Never'
-    };
-    setDataSources([...dataSources, newDataSource]);
-    setNewSource({ name: '', type: '', endpoint: '', credentials: '' });
-    setOpenDialog(false);
-  };
-
-  const toggleDataSource = (id) => {
-    setDataSources(dataSources.map(source =>
-      source.id === id 
-        ? { ...source, status: source.status === 'connected' ? 'disabled' : 'connected' }
-        : source
-    ));
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'POS Data': return <PointOfSale />;
+      case 'CRM': return <Group />;
+      case 'Web Data': return <MenuBook />;
+      case 'Survey Data': return <CloudUpload />;
+      default: return <Storage />;
+    }
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Data Integration Hub
+        Operator & Consumer Data Integration
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        Aggregate and analyze POS, menu, and CRM data for real-time AFH insights
       </Typography>
 
       <Grid container spacing={3}>
@@ -117,14 +146,23 @@ const DataIntegration = () => {
                 {dataSources.map((source) => (
                   <ListItem key={source.id} divider>
                     <ListItemIcon>
-                      {getStatusIcon(source.status)}
+                      {getTypeIcon(source.type)}
                     </ListItemIcon>
                     <ListItemText
-                      primary={source.name}
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {source.name}
+                          <Chip 
+                            label={source.status} 
+                            size="small" 
+                            color={getStatusColor(source.status)}
+                          />
+                        </Box>
+                      }
                       secondary={
                         <Box>
                           <Typography variant="body2" color="text.secondary">
-                            Type: {source.type} • Last sync: {source.lastSync}
+                            {source.type} • Coverage: {source.coverage} • Last sync: {source.lastSync}
                           </Typography>
                           <LinearProgress 
                             variant="determinate" 
@@ -139,12 +177,44 @@ const DataIntegration = () => {
                       <Switch
                         edge="end"
                         checked={source.status === 'connected'}
-                        onChange={() => toggleDataSource(source.id)}
+                        onChange={() => {}}
                       />
                     </ListItemSecondaryAction>
                   </ListItem>
                 ))}
               </List>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Real-time Data Streams
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {dataStreams.map((stream, index) => (
+                  <Card key={index} variant="outlined">
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box>
+                          <Typography variant="h4" color="primary">
+                            {stream.value}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {stream.name}
+                          </Typography>
+                        </Box>
+                        <Chip label={stream.trend} color="success" size="small" />
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {stream.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
             </CardContent>
           </Card>
 
@@ -155,19 +225,25 @@ const DataIntegration = () => {
               </Typography>
               <Grid container spacing={2}>
                 {[
-                  { metric: 'Completeness', value: 92, color: 'success' },
-                  { metric: 'Accuracy', value: 88, color: 'warning' },
-                  { metric: 'Timeliness', value: 95, color: 'success' },
-                  { metric: 'Consistency', value: 85, color: 'warning' }
+                  { metric: 'POS Data Coverage', value: 85, color: 'success' },
+                  { metric: 'Menu Update Latency', value: 92, color: 'warning' },
+                  { metric: 'Review Sentiment Accuracy', value: 78, color: 'warning' },
+                  { metric: 'Competitive Intelligence', value: 65, color: 'error' }
                 ].map((item, index) => (
-                  <Grid item xs={6} md={3} key={index}>
+                  <Grid item xs={6} key={index}>
                     <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h4" color={`${item.color}.main`}>
+                      <Typography variant="h6" color={`${item.color}.main`}>
                         {item.value}%
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary">
                         {item.metric}
                       </Typography>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={item.value} 
+                        color={item.color}
+                        sx={{ mt: 1 }}
+                      />
                     </Box>
                   </Grid>
                 ))}
@@ -175,62 +251,32 @@ const DataIntegration = () => {
             </CardContent>
           </Card>
         </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Available Connectors
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {[
-                  { name: 'Financial APIs', icon: <Api />, count: 12 },
-                  { name: 'Databases', icon: <Storage />, count: 8 },
-                  { name: 'Cloud Storage', icon: <CloudUpload />, count: 6 },
-                  { name: 'Custom APIs', icon: <Add />, count: 'Unlimited' }
-                ].map((connector, index) => (
-                  <Card key={index} variant="outlined">
-                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {connector.icon}
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle1">{connector.name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {connector.count} connectors
-                        </Typography>
-                      </Box>
-                      <Button size="small">Explore</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add New Data Source</DialogTitle>
+        <DialogTitle>Connect New Data Source</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>Data Type</InputLabel>
+              <Select
+                value={newSource.type}
+                label="Data Type"
+                onChange={(e) => setNewSource({ ...newSource, type: e.target.value })}
+              >
+                <MenuItem value="POS Data">POS System</MenuItem>
+                <MenuItem value="CRM">Operator CRM</MenuItem>
+                <MenuItem value="Web Data">Menu & Web Data</MenuItem>
+                <MenuItem value="Survey Data">Consumer Feedback</MenuItem>
+                <MenuItem value="API">External API</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Source Name"
               value={newSource.name}
               onChange={(e) => setNewSource({ ...newSource, name: e.target.value })}
               fullWidth
             />
-            <FormControl fullWidth>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={newSource.type}
-                label="Type"
-                onChange={(e) => setNewSource({ ...newSource, type: e.target.value })}
-              >
-                <MenuItem value="API">API</MenuItem>
-                <MenuItem value="Database">Database</MenuItem>
-                <MenuItem value="Web Scraping">Web Scraping</MenuItem>
-                <MenuItem value="File Upload">File Upload</MenuItem>
-              </Select>
-            </FormControl>
             <TextField
               label="Endpoint URL"
               value={newSource.endpoint}
@@ -238,7 +284,7 @@ const DataIntegration = () => {
               fullWidth
             />
             <TextField
-              label="Credentials"
+              label="API Key / Credentials"
               type="password"
               value={newSource.credentials}
               onChange={(e) => setNewSource({ ...newSource, credentials: e.target.value })}
@@ -249,11 +295,11 @@ const DataIntegration = () => {
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button 
-            onClick={handleAddSource} 
+            onClick={() => setOpenDialog(false)} 
             variant="contained"
             disabled={!newSource.name || !newSource.type}
           >
-            Add Source
+            Connect Source
           </Button>
         </DialogActions>
       </Dialog>
