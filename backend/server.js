@@ -91,7 +91,98 @@ app.post('/api/market-signals', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+app.post('/api/ai/chat', async (req, res) => {
+  try {
+    const { prompt, context, agentType } = req.body;
+    
+    let systemContext = '';
+    switch (agentType) {
+      case 'market-analyst':
+        systemContext = 'You are a market analyst specializing in AFH channel trends and opportunities.';
+        break;
+      case 'outreach-generator':
+        systemContext = 'You are a commercial outreach expert creating compelling partnership proposals.';
+        break;
+      case 'competitive-intel':
+        systemContext = 'You are a competitive intelligence analyst for beverage markets.';
+        break;
+      default:
+        systemContext = 'You are an AFH channel strategist for CPG companies.';
+    }
 
+    const response = await OpenAIService.generateMarketInsights(prompt, systemContext + ' ' + context);
+    
+    res.json({
+      success: true,
+      response,
+      agent: agentType
+    });
+  } catch (error) {
+    console.error('AI Chat Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate AI response',
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/ai/generate-email', async (req, res) => {
+  try {
+    const { account, channel, context } = req.body;
+    
+    const email = await OpenAIService.generateOutreachEmail(account, channel, context);
+    
+    res.json({
+      success: true,
+      email
+    });
+  } catch (error) {
+    console.error('Email Generation Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate outreach email'
+    });
+  }
+});
+
+app.post('/api/ai/analyze-trends', async (req, res) => {
+  try {
+    const { data, channel } = req.body;
+    
+    const analysis = await OpenAIService.analyzeMarketTrends(data, channel);
+    
+    res.json({
+      success: true,
+      analysis
+    });
+  } catch (error) {
+    console.error('Trend Analysis Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to analyze market trends'
+    });
+  }
+});
+
+app.post('/api/ai/generate-playbook', async (req, res) => {
+  try {
+    const { channels, accountType, objectives } = req.body;
+    
+    const strategy = await OpenAIService.generatePlaybookStrategy(channels, accountType, objectives);
+    
+    res.json({
+      success: true,
+      strategy
+    });
+  } catch (error) {
+    console.error('Playbook Generation Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate playbook strategy'
+    });
+  }
+});
 // Playbooks
 app.get('/api/playbooks', async (req, res) => {
   try {
