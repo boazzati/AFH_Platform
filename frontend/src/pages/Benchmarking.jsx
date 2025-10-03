@@ -28,77 +28,85 @@ import {
   Equalizer,
   BarChart,
   Download,
-  Share
+  Share,
+  EmojiEvents,
+  Insights
 } from '@mui/icons-material';
 
 const Benchmarking = () => {
-  const [timeframe, setTimeframe] = useState('1y');
-  const [benchmark, setBenchmark] = useState('sp500');
+  const [timeframe, setTimeframe] = useState('q1');
+  const [channel, setChannel] = useState('all');
   const [showDetails, setShowDetails] = useState(false);
 
   const performanceData = [
     {
-      metric: 'Total Return',
-      yourPortfolio: 15.2,
-      benchmark: 12.8,
-      difference: 2.4,
+      metric: 'Account Win Rate',
+      yourPerformance: 42,
+      benchmark: 38,
+      difference: 4,
       status: 'outperform'
     },
     {
-      metric: 'Volatility',
-      yourPortfolio: 8.1,
-      benchmark: 9.4,
-      difference: -1.3,
-      status: 'better'
-    },
-    {
-      metric: 'Sharpe Ratio',
-      yourPortfolio: 1.87,
-      benchmark: 1.36,
-      difference: 0.51,
+      metric: 'Pilot-to-Launch Conversion',
+      yourPerformance: 68,
+      benchmark: 62,
+      difference: 6,
       status: 'outperform'
     },
     {
-      metric: 'Max Drawdown',
-      yourPortfolio: -12.3,
-      benchmark: -15.7,
-      difference: 3.4,
+      metric: 'Average Contract Value',
+      yourPerformance: 125000,
+      benchmark: 142000,
+      difference: -17000,
+      status: 'underperform'
+    },
+    {
+      metric: 'Sales Cycle Length (days)',
+      yourPerformance: 45,
+      benchmark: 52,
+      difference: -7,
       status: 'better'
     },
     {
-      metric: 'Alpha',
-      yourPortfolio: 2.1,
-      benchmark: 0,
-      difference: 2.1,
-      status: 'positive'
+      metric: 'Account Retention Rate',
+      yourPerformance: 92,
+      benchmark: 88,
+      difference: 4,
+      status: 'outperform'
     },
     {
-      metric: 'Beta',
-      yourPortfolio: 0.92,
-      benchmark: 1.0,
-      difference: -0.08,
-      status: 'neutral'
+      metric: 'Market Share Growth',
+      yourPerformance: 3.2,
+      benchmark: 2.1,
+      difference: 1.1,
+      status: 'outperform'
     }
   ];
 
-  const sectorAllocation = [
-    { sector: 'Technology', yourPortfolio: 35, benchmark: 28, difference: 7 },
-    { sector: 'Healthcare', yourPortfolio: 18, benchmark: 13, difference: 5 },
-    { sector: 'Financials', yourPortfolio: 12, benchmark: 11, difference: 1 },
-    { sector: 'Consumer', yourPortfolio: 15, benchmark: 18, difference: -3 },
-    { sector: 'Energy', yourPortfolio: 8, benchmark: 4, difference: 4 },
-    { sector: 'Industrials', yourPortfolio: 12, benchmark: 14, difference: -2 }
+  const channelPerformance = [
+    { channel: 'QSR', yourGrowth: 15.2, industryAvg: 12.8, trend: 'up' },
+    { channel: 'Workplace', yourGrowth: 8.7, industryAvg: 6.3, trend: 'up' },
+    { channel: 'Leisure', yourGrowth: 12.1, industryAvg: 14.2, trend: 'down' },
+    { channel: 'Education', yourGrowth: 5.4, industryAvg: 4.8, trend: 'up' },
+    { channel: 'Healthcare', yourGrowth: 3.2, industryAvg: 2.9, trend: 'up' }
+  ];
+
+  const competitiveWins = [
+    { account: 'Burger King Regional', competitor: 'Coca-Cola', winReason: 'Superior beverage portfolio', impact: 'High' },
+    { account: 'Google EMEA', competitor: 'PepsiCo', winReason: 'Better wellness offering', impact: 'Medium' },
+    { account: 'Hilton Americas', competitor: 'Local Brands', winReason: 'Premium positioning', impact: 'High' },
+    { account: 'State University System', competitor: 'Coca-Cola', winReason: 'Competitive pricing', impact: 'Medium' }
   ];
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'outperform':
       case 'better':
-      case 'positive':
+      case 'up':
         return 'success';
       case 'underperform':
       case 'worse':
-      case 'negative':
+      case 'down':
         return 'error';
       default:
         return 'default';
@@ -109,21 +117,37 @@ const Benchmarking = () => {
     switch (status) {
       case 'outperform':
       case 'better':
-      case 'positive':
+      case 'up':
         return <TrendingUp color="success" />;
       case 'underperform':
       case 'worse':
-      case 'negative':
+      case 'down':
         return <TrendingDown color="error" />;
       default:
         return <Equalizer color="disabled" />;
     }
   };
 
+  const formatValue = (value, metric) => {
+    if (metric.includes('Value')) {
+      return `$${(value / 1000).toFixed(0)}K`;
+    }
+    if (metric.includes('Rate') || metric.includes('Growth')) {
+      return `${value}%`;
+    }
+    if (metric.includes('Days')) {
+      return `${value} days`;
+    }
+    return value;
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Performance Benchmarking
+        AFH Performance Benchmarking
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        Cross-market performance analysis and competitive win intelligence
       </Typography>
 
       <Grid container spacing={3}>
@@ -132,7 +156,7 @@ const Benchmarking = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6">
-                  Portfolio vs Benchmark
+                  Performance vs Industry Benchmarks
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -142,31 +166,30 @@ const Benchmarking = () => {
                       label="Timeframe"
                       onChange={(e) => setTimeframe(e.target.value)}
                     >
-                      <MenuItem value="1m">1 Month</MenuItem>
-                      <MenuItem value="3m">3 Months</MenuItem>
-                      <MenuItem value="6m">6 Months</MenuItem>
-                      <MenuItem value="1y">1 Year</MenuItem>
-                      <MenuItem value="3y">3 Years</MenuItem>
+                      <MenuItem value="q1">Q1 2024</MenuItem>
+                      <MenuItem value="q4">Q4 2023</MenuItem>
+                      <MenuItem value="q3">Q3 2023</MenuItem>
+                      <MenuItem value="ytd">YTD 2024</MenuItem>
                     </Select>
                   </FormControl>
                   <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Benchmark</InputLabel>
+                    <InputLabel>Channel</InputLabel>
                     <Select
-                      value={benchmark}
-                      label="Benchmark"
-                      onChange={(e) => setBenchmark(e.target.value)}
+                      value={channel}
+                      label="Channel"
+                      onChange={(e) => setChannel(e.target.value)}
                     >
-                      <MenuItem value="sp500">S&P 500</MenuItem>
-                      <MenuItem value="nasdaq">NASDAQ</MenuItem>
-                      <MenuItem value="russell2000">Russell 2000</MenuItem>
-                      <MenuItem value="custom">Custom Index</MenuItem>
+                      <MenuItem value="all">All Channels</MenuItem>
+                      <MenuItem value="qsr">QSR</MenuItem>
+                      <MenuItem value="workplace">Workplace</MenuItem>
+                      <MenuItem value="leisure">Leisure</MenuItem>
                     </Select>
                   </FormControl>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={showDetails}
-                        onChange={(e) => setShowDetails(e.target.value)}
+                        onChange={(e) => setShowDetails(e.target.checked)}
                       />
                     }
                     label="Detailed View"
@@ -188,7 +211,7 @@ const Benchmarking = () => {
                           <TableHead>
                             <TableRow>
                               <TableCell>Metric</TableCell>
-                              <TableCell align="right">Your Portfolio</TableCell>
+                              <TableCell align="right">Your Performance</TableCell>
                               <TableCell align="right">Benchmark</TableCell>
                               <TableCell align="right">Difference</TableCell>
                             </TableRow>
@@ -203,20 +226,14 @@ const Benchmarking = () => {
                                   </Box>
                                 </TableCell>
                                 <TableCell align="right">
-                                  {typeof row.yourPortfolio === 'number' 
-                                    ? `${row.yourPortfolio}%` 
-                                    : row.yourPortfolio
-                                  }
+                                  {formatValue(row.yourPerformance, row.metric)}
                                 </TableCell>
                                 <TableCell align="right">
-                                  {typeof row.benchmark === 'number' 
-                                    ? `${row.benchmark}%` 
-                                    : row.benchmark
-                                  }
+                                  {formatValue(row.benchmark, row.metric)}
                                 </TableCell>
                                 <TableCell align="right">
                                   <Chip
-                                    label={`${row.difference > 0 ? '+' : ''}${row.difference}%`}
+                                    label={formatValue(row.difference, row.metric)}
                                     size="small"
                                     color={getStatusColor(row.status)}
                                     variant="outlined"
@@ -235,26 +252,27 @@ const Benchmarking = () => {
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        Sector Allocation Comparison
+                        Channel Performance
                       </Typography>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {sectorAllocation.map((sector, index) => (
+                        {channelPerformance.map((item, index) => (
                           <Box key={index}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                               <Typography variant="body2" fontWeight="bold">
-                                {sector.sector}
+                                {item.channel}
                               </Typography>
-                              <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Typography variant="body2">
-                                  You: {sector.yourPortfolio}%
+                              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                <Typography variant="body2" color="primary">
+                                  You: {item.yourGrowth}%
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                  Bench: {sector.benchmark}%
+                                  Industry: {item.industryAvg}%
                                 </Typography>
                                 <Chip
-                                  label={`${sector.difference > 0 ? '+' : ''}${sector.difference}%`}
+                                  icon={getStatusIcon(item.trend)}
+                                  label={`${(item.yourGrowth - item.industryAvg).toFixed(1)}%`}
                                   size="small"
-                                  color={sector.difference > 0 ? 'success' : sector.difference < 0 ? 'error' : 'default'}
+                                  color={getStatusColor(item.trend)}
                                   variant="outlined"
                                 />
                               </Box>
@@ -262,7 +280,7 @@ const Benchmarking = () => {
                             <Box sx={{ display: 'flex', height: 8, gap: 0.5 }}>
                               <LinearProgress
                                 variant="determinate"
-                                value={sector.yourPortfolio}
+                                value={Math.min(item.yourGrowth * 2, 100)}
                                 sx={{ 
                                   flexGrow: 1,
                                   '& .MuiLinearProgress-bar': {
@@ -272,7 +290,7 @@ const Benchmarking = () => {
                               />
                               <LinearProgress
                                 variant="determinate"
-                                value={sector.benchmark}
+                                value={Math.min(item.industryAvg * 2, 100)}
                                 sx={{ 
                                   flexGrow: 1,
                                   '& .MuiLinearProgress-bar': {
@@ -296,32 +314,35 @@ const Benchmarking = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Performance Summary
+                Competitive Win Analysis
               </Typography>
-              <Grid container spacing={2}>
-                {[
-                  { label: 'Total Return', value: '15.2%', benchmark: '12.8%', trend: 'up' },
-                  { label: 'Risk Adjusted Return', value: '1.87', benchmark: '1.36', trend: 'up' },
-                  { label: 'Volatility', value: '8.1%', benchmark: '9.4%', trend: 'down' },
-                  { label: 'Active Return', value: '2.4%', benchmark: '0.0%', trend: 'up' }
-                ].map((item, index) => (
-                  <Grid item xs={6} key={index}>
-                    <Card variant="outlined">
-                      <CardContent sx={{ textAlign: 'center' }}>
-                        <Typography variant="h5" color={`${item.trend === 'up' ? 'success.main' : 'error.main'}`}>
-                          {item.value}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {item.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          vs {item.benchmark} benchmark
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {competitiveWins.map((win, index) => (
+                  <Card key={index} variant="outlined">
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold">
+                            {win.account}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Won from {win.competitor}
+                          </Typography>
+                        </Box>
+                        <Chip 
+                          icon={<EmojiEvents />}
+                          label={win.impact} 
+                          color={win.impact === 'High' ? 'success' : 'primary'}
+                          size="small"
+                        />
+                      </Box>
+                      <Typography variant="body2">
+                        {win.winReason}
+                      </Typography>
+                    </CardContent>
+                  </Card>
                 ))}
-              </Grid>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -330,20 +351,48 @@ const Benchmarking = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Recommendations
+                AI Recommendations
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {[
-                  { action: 'Increase Technology exposure', impact: 'High', confidence: 85 },
-                  { action: 'Reduce Consumer discretionary', impact: 'Medium', confidence: 72 },
-                  { action: 'Add Healthcare positions', impact: 'High', confidence: 78 },
-                  { action: 'Consider Energy sector ETF', impact: 'Medium', confidence: 65 }
+                  { 
+                    action: 'Focus on Leisure channel premium placements', 
+                    insight: 'Underperforming industry average by 2.1%',
+                    impact: 'High', 
+                    confidence: 85 
+                  },
+                  { 
+                    action: 'Increase contract values in QSR segment', 
+                    insight: '17% below benchmark despite higher win rate',
+                    impact: 'High', 
+                    confidence: 78 
+                  },
+                  { 
+                    action: 'Expand workplace wellness initiatives', 
+                    insight: 'Strong growth but opportunity for premiumization',
+                    impact: 'Medium', 
+                    confidence: 72 
+                  },
+                  { 
+                    action: 'Accelerate education channel partnerships', 
+                    insight: 'Solid performance with room for expansion',
+                    impact: 'Medium', 
+                    confidence: 65 
+                  }
                 ].map((rec, index) => (
                   <Card key={index} variant="outlined">
                     <CardContent>
-                      <Typography variant="body2" fontWeight="bold" gutterBottom>
-                        {rec.action}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
+                        <Insights color="primary" />
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="body2" fontWeight="bold" gutterBottom>
+                            {rec.action}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {rec.insight}
+                          </Typography>
+                        </Box>
+                      </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Chip label={`${rec.impact} Impact`} size="small" />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
