@@ -14,30 +14,47 @@ import {
   Chip,
   Stack
 } from '@mui/material';
-import { Add, Save, PlayArrow } from '@mui/icons-material';
+import { Add, Save, PlayArrow, Restaurant, Business, LocalCafe } from '@mui/icons-material';
 
 const PlaybookGenerator = () => {
-  const [strategyName, setStrategyName] = useState('');
-  const [selectedSectors, setSelectedSectors] = useState([]);
-  const [riskLevel, setRiskLevel] = useState('medium');
+  const [playbookName, setPlaybookName] = useState('');
+  const [selectedChannels, setSelectedChannels] = useState([]);
+  const [accountType, setAccountType] = useState('');
 
-  const sectors = ['Technology', 'Healthcare', 'Finance', 'Energy', 'Real Estate', 'Consumer'];
-  const riskLevels = ['low', 'medium', 'high', 'aggressive'];
+  const channels = [
+    { name: 'Quick Service Restaurant (QSR)', icon: <Restaurant /> },
+    { name: 'Workplace & Corporate', icon: <Business /> },
+    { name: 'Leisure & Hospitality', icon: <LocalCafe /> },
+    { name: 'Education', icon: <Business /> },
+    { name: 'Healthcare', icon: <Business /> }
+  ];
 
-  const handleSectorSelect = (sector) => {
-    if (!selectedSectors.includes(sector)) {
-      setSelectedSectors([...selectedSectors, sector]);
+  const accountTypes = ['New Account Acquisition', 'Existing Account Growth', 'Competitive Takeover', 'Menu Expansion'];
+
+  const playbookTemplates = [
+    { name: 'QSR Beverage Partnership', channel: 'QSR', focus: 'New account acquisition' },
+    { name: 'Workplace Wellness Program', channel: 'Workplace', focus: 'Healthy beverage placement' },
+    { name: 'Hotel Mini-Bar Refresh', channel: 'Leisure', focus: 'Premium portfolio placement' },
+    { name: 'Campus Dining Expansion', channel: 'Education', focus: 'Volume contract strategy' }
+  ];
+
+  const handleChannelSelect = (channel) => {
+    if (!selectedChannels.find(c => c.name === channel.name)) {
+      setSelectedChannels([...selectedChannels, channel]);
     }
   };
 
-  const handleSectorRemove = (sectorToRemove) => {
-    setSelectedSectors(selectedSectors.filter(sector => sector !== sectorToRemove));
+  const handleChannelRemove = (channelToRemove) => {
+    setSelectedChannels(selectedChannels.filter(channel => channel.name !== channelToRemove.name));
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Investment Playbook Generator
+        Commercial Playbook Generator
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        AI-generated living playbooks for AFH channel strategies
       </Typography>
 
       <Grid container spacing={3}>
@@ -45,59 +62,60 @@ const PlaybookGenerator = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Create New Strategy
+                Create New Playbook
               </Typography>
               
               <TextField
                 fullWidth
-                label="Strategy Name"
-                value={strategyName}
-                onChange={(e) => setStrategyName(e.target.value)}
+                label="Playbook Name"
+                placeholder="e.g., QSR Beverage Partnership Strategy"
+                value={playbookName}
+                onChange={(e) => setPlaybookName(e.target.value)}
                 sx={{ mb: 3 }}
               />
 
               <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Risk Level</InputLabel>
+                <InputLabel>Account Type</InputLabel>
                 <Select
-                  value={riskLevel}
-                  label="Risk Level"
-                  onChange={(e) => setRiskLevel(e.target.value)}
+                  value={accountType}
+                  label="Account Type"
+                  onChange={(e) => setAccountType(e.target.value)}
                 >
-                  {riskLevels.map(level => (
-                    <MenuItem key={level} value={level}>
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </MenuItem>
+                  {accountTypes.map(type => (
+                    <MenuItem key={type} value={type}>{type}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
               <Typography variant="subtitle1" gutterBottom>
-                Select Sectors
+                Target Channels
               </Typography>
               
               <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                {sectors.map(sector => (
+                {channels.map(channel => (
                   <Chip
-                    key={sector}
-                    label={sector}
-                    onClick={() => handleSectorSelect(sector)}
-                    color={selectedSectors.includes(sector) ? 'primary' : 'default'}
-                    variant={selectedSectors.includes(sector) ? 'filled' : 'outlined'}
+                    key={channel.name}
+                    icon={channel.icon}
+                    label={channel.name}
+                    onClick={() => handleChannelSelect(channel)}
+                    color={selectedChannels.find(c => c.name === channel.name) ? 'primary' : 'default'}
+                    variant={selectedChannels.find(c => c.name === channel.name) ? 'filled' : 'outlined'}
                   />
                 ))}
               </Stack>
 
-              {selectedSectors.length > 0 && (
+              {selectedChannels.length > 0 && (
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" gutterBottom>
-                    Selected Sectors:
+                    Selected Channels:
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                    {selectedSectors.map(sector => (
+                    {selectedChannels.map(channel => (
                       <Chip
-                        key={sector}
-                        label={sector}
-                        onDelete={() => handleSectorRemove(sector)}
+                        key={channel.name}
+                        icon={channel.icon}
+                        label={channel.name}
+                        onDelete={() => handleChannelRemove(channel)}
                         color="primary"
                       />
                     ))}
@@ -107,10 +125,10 @@ const PlaybookGenerator = () => {
 
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button variant="contained" startIcon={<Save />}>
-                  Save Strategy
+                  Generate Playbook
                 </Button>
                 <Button variant="outlined" startIcon={<PlayArrow />}>
-                  Execute Strategy
+                  Preview Strategy
                 </Button>
               </Box>
             </CardContent>
@@ -121,13 +139,18 @@ const PlaybookGenerator = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Strategy Templates
+                Playbook Templates
               </Typography>
               <Stack spacing={2}>
-                {['Growth Portfolio', 'Value Investment', 'Sector Rotation', 'Market Neutral'].map(template => (
-                  <Card key={template} variant="outlined">
+                {playbookTemplates.map((template, index) => (
+                  <Card key={index} variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle1">{template}</Typography>
+                      <Typography variant="subtitle1" gutterBottom>
+                        {template.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {template.channel} • {template.focus}
+                      </Typography>
                       <Button size="small" startIcon={<Add />}>
                         Use Template
                       </Button>
