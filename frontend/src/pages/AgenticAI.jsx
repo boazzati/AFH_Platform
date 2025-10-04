@@ -32,7 +32,7 @@ import {
   Campaign,
   Refresh
 } from '@mui/icons-material';
-import { aiAPI } from '../services/api';
+import { agenticAIApi } from '../services/api'; // Updated import
 
 const AgenticAI = () => {
   const [prompt, setPrompt] = useState('');
@@ -96,7 +96,7 @@ const AgenticAI = () => {
     setIsProcessing(true);
 
     try {
-      const response = await aiAPI.chat({
+      const response = await agenticAIApi.chat({ // Updated API call
         prompt,
         context: `User is asking about AFH channel strategies. Current agent: ${currentAgent?.name}`,
         agentType: selectedAgent
@@ -226,16 +226,32 @@ const AgenticAI = () => {
                 Quick Actions
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button variant="outlined" startIcon={<Description />}>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Description />}
+                  onClick={() => handleQuickPrompt('Generate a comprehensive proposal for a new beverage line in hotel chains')}
+                >
                   Generate Proposal
                 </Button>
-                <Button variant="outlined" startIcon={<Campaign />}>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Campaign />}
+                  onClick={() => handleQuickPrompt('Draft an outreach email for restaurant chain partnership')}
+                >
                   Draft Outreach Email
                 </Button>
-                <Button variant="outlined" startIcon={<Analytics />}>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Analytics />}
+                  onClick={() => handleQuickPrompt('Provide competitive analysis of energy drink market in convenience stores')}
+                >
                   Competitive Analysis
                 </Button>
-                <Button variant="outlined" startIcon={<TrendingUp />}>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<TrendingUp />}
+                  onClick={() => handleQuickPrompt('Generate market report for QSR beverage trends')}
+                >
                   Market Report
                 </Button>
               </Box>
