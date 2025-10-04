@@ -32,7 +32,7 @@ import {
   EmojiEvents,
   Insights
 } from '@mui/icons-material';
-
+import { benchmarkingApi } from '../services/api';
 const Benchmarking = () => {
   const [timeframe, setTimeframe] = useState('q1');
   const [channel, setChannel] = useState('all');
