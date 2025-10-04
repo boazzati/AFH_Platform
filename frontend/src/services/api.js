@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://afhplatform-production.up.railway.app/api'
+  ? 'https://afhapp.herokuapp.com/api'  // Your Heroku backend
   : 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -10,6 +10,14 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// AI Services - ADD THIS SECTION
+export const aiAPI = {
+  chat: (data) => api.post('/ai/chat', data),
+  generateEmail: (data) => api.post('/ai/generate-email', data),
+  analyzeTrends: (data) => api.post('/ai/analyze-trends', data),
+  generatePlaybook: (data) => api.post('/ai/generate-playbook', data),
+};
 
 // Market Mapping API
 export const marketMappingAPI = {
