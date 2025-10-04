@@ -32,6 +32,7 @@ import {
   Campaign,
   Refresh
 } from '@mui/icons-material';
+import { aiAPI } from '../services/api';
 
 const AgenticAI = () => {
   const [prompt, setPrompt] = useState('');
@@ -86,124 +87,37 @@ const AgenticAI = () => {
     'Generate proposal for campus dining contract'
   ];
 
-const handleSendMessage = async () => {
-  if (!prompt.trim()) return;
+  const handleSendMessage = async () => {
+    if (!prompt.trim()) return;
 
-  const userMessage = { role: 'user', content: prompt };
-  setConversation(prev => [...prev, userMessage]);
-  setPrompt('');
-  setIsProcessing(true);
+    const userMessage = { role: 'user', content: prompt };
+    setConversation(prev => [...prev, userMessage]);
+    setPrompt('');
+    setIsProcessing(true);
 
-  try {
-    const response = await aiAPI.chat({
-      prompt,
-      context: `User is asking about AFH channel strategies. Current agent: ${currentAgent?.name}`,
-      agentType: selectedAgent
-    });
+    try {
+      const response = await aiAPI.chat({
+        prompt,
+        context: `User is asking about AFH channel strategies. Current agent: ${currentAgent?.name}`,
+        agentType: selectedAgent
+      });
 
-    const aiResponse = {
-      role: 'ai',
-      content: response.data.response
-    };
-    
-    setConversation(prev => [...prev, aiResponse]);
-  } catch (error) {
-    console.error('AI Chat Error:', error);
-    const errorResponse = {
-      role: 'ai',
-      content: 'I apologize, but I encountered an error processing your request. Please try again.'
-    };
-    setConversation(prev => [...prev, errorResponse]);
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
-// Add new function for quick actions
-const handleGenerateEmail = async () => {
-  try {
-    const response = await aiAPI.generateEmail({
-      account: 'Sample Hotel Chain',
-      channel: 'Leisure',
-      context: 'Premium beverage partnership for mini-bar placement'
-    });
-    
-    // Open email in dialog or new section
-    console.log('Generated Email:', response.data.email);
-    alert('Email generated! Check console for details.');
-  } catch (error) {
-    console.error('Email Generation Error:', error);
-  }
-};
-const handleGenerateProposal = async () => {
-  setIsProcessing(true);
-  try {
-    const response = await aiAPI.generatePlaybook({
-      channels: selectedChannels.map(ch => ch.name),
-      accountType: 'New Account Acquisition',
-      objectives: 'Increase market share in premium beverage segment'
-    });
-    
-    const aiResponse = {
-      role: 'ai',
-      content: `**Generated Strategy Proposal:**\n\n${response.data.strategy}`
-    };
-    
-    setConversation(prev => [...prev, aiResponse]);
-  } catch (error) {
-    console.error('Proposal Generation Error:', error);
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
-const handleAnalyzeTrends = async () => {
-  setIsProcessing(true);
-  try {
-    const marketData = {
-      qsrGrowth: 15.2,
-      workplaceExpansion: 8.7,
-      premiumPlacements: 12.1
-    };
-    
-    const response = await aiAPI.analyzeTrends({
-      data: marketData,
-      channel: 'All Channels'
-    });
-    
-    const aiResponse = {
-      role: 'ai',
-      content: `**Market Trend Analysis:**\n\n${response.data.analysis}`
-    };
-    
-    setConversation(prev => [...prev, aiResponse]);
-  } catch (error) {
-    console.error('Trend Analysis Error:', error);
-  } finally {
-    setIsProcessing(false);
-  }
-};
-    // Simulate AI response based on selected agent
-    setTimeout(() => {
-      let aiResponse = { role: 'ai', content: '' };
-      
-      switch(selectedAgent) {
-        case 'market-analyst':
-          aiResponse.content = `Based on current AFH market data, I'm seeing strong growth opportunities in the QSR channel for premium beverage placements. The Northeast region shows 15% YOY growth in beverage sales, with particular strength in cold brew and functional beverages. I recommend focusing on accounts with recent menu refreshes.`;
-          break;
-        case 'outreach-generator':
-          aiResponse.content = `I've drafted a personalized outreach email for hotel chain partnerships. The template emphasizes your premium portfolio and includes data-driven insights about mini-bar performance. Would you like me to customize it further for specific chains like Hilton or Marriott?`;
-          break;
-        case 'competitive-intel':
-          aiResponse.content = `Competitor analysis shows Coca-Cola gaining 3% market share in workplace channels through new wellness initiatives. PepsiCo maintains strong QSR presence but shows vulnerability in the education segment. Key opportunity: leverage your healthier beverage portfolio in workplace and education channels.`;
-          break;
-        default:
-          aiResponse.content = `I've analyzed your query about "${prompt}". Based on AFH channel data and current market conditions, I recommend a focused approach combining data-driven insights with personalized outreach strategies.`;
-      }
+      const aiResponse = {
+        role: 'ai',
+        content: response.data.response
+      };
       
       setConversation(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      const errorResponse = {
+        role: 'ai',
+        content: 'I apologize, but I encountered an error processing your request. Please try again.'
+      };
+      setConversation(prev => [...prev, errorResponse]);
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const handleQuickPrompt = (quickPrompt) => {
