@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://afhapp.herokuapp.com/api'  // Your Heroku backend
-  : 'http://localhost:5000/api';
+  ? 'https://afhapp-1f9346a8427b.herokuapp.com/api'  // Correct Heroku backend
+  : 'http://localhost:3001/api';  // Fixed port
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +11,7 @@ const api = axios.create({
   },
 });
 
-// AI Services - ADD THIS SECTION
+// AI Services
 export const aiAPI = {
   chat: (data) => api.post('/ai/chat', data),
   generateEmail: (data) => api.post('/ai/generate-email', data),
@@ -19,10 +19,10 @@ export const aiAPI = {
   generatePlaybook: (data) => api.post('/ai/generate-playbook', data),
 };
 
-// Market Mapping API
-export const marketMappingAPI = {
-  getAll: () => api.get('/market-mapping'),
-  create: (data) => api.post('/market-mapping', data),
+// Market Signals API (Updated to match your backend)
+export const marketSignalsAPI = {
+  getAll: () => api.get('/market-signals'),
+  create: (data) => api.post('/market-signals', data),
 };
 
 // Playbook API
@@ -31,16 +31,21 @@ export const playbookAPI = {
   create: (data) => api.post('/playbooks', data),
 };
 
-// Execution API
-export const executionAPI = {
-  getAll: () => api.get('/executions'),
-  create: (data) => api.post('/executions', data),
+// Projects API
+export const projectAPI = {
+  getAll: () => api.get('/projects'),
+  create: (data) => api.post('/projects', data),
 };
 
 // Expert API
 export const expertAPI = {
   getAll: () => api.get('/experts'),
   create: (data) => api.post('/experts', data),
+};
+
+// Partnership Analysis API
+export const partnershipAPI = {
+  analyze: (data) => api.post('/analyze-partnership', data),
 };
 
 // Health check
