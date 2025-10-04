@@ -1,14 +1,7 @@
-this is my complete server.js file, add the full new code to copy paste, don't change any of the signals, these are all the signals (
-AgenticAI.jsx
-Benchmarking.jsx
-Dashboard.jsx
-DataIntegration.jsx
-ExecutionEngine.jsx
-ExpertNetwork.jsx
-MarketMapping.jsx
-PlaybookGenerator.jsx) : full code: const express = require('express');
+const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { OpenAI } = require('openai');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +17,120 @@ mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Simple OpenAI service functions
+const OpenAIService = {
+  async generateMarketInsights(prompt, context) {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: context || "You are a market analyst specializing in AFH channel trends and opportunities."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      throw new Error('Failed to generate market insights');
+    }
+  },
+
+  async generateOutreachEmail(account, channel, context) {
+    try {
+      const prompt = `Create a professional outreach email for ${account} in the ${channel} channel. Context: ${context}`;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a commercial outreach expert creating compelling partnership proposals for AFH channels."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 600,
+        temperature: 0.7,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      throw new Error('Failed to generate outreach email');
+    }
+  },
+
+  async analyzeMarketTrends(data, channel) {
+    try {
+      const prompt = `Analyze the following market data for ${channel} channel: ${JSON.stringify(data)}. Provide key insights and trends.`;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a market intelligence analyst specializing in beverage and CPG markets."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      throw new Error('Failed to analyze market trends');
+    }
+  },
+
+  async generatePlaybookStrategy(channels, accountType, objectives) {
+    try {
+      const prompt = `Create a playbook strategy for ${accountType} targeting ${channels.join(', ')} with objectives: ${objectives}`;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a channel strategy expert creating playbooks for AFH market expansion."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 800,
+        temperature: 0.7,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      throw new Error('Failed to generate playbook strategy');
+    }
+  }
+};
 
 // MongoDB Schemas
 const MarketSignalSchema = new mongoose.Schema({
@@ -78,7 +185,37 @@ const Playbook = mongoose.model('Playbook', PlaybookSchema);
 const Project = mongoose.model('Project', ProjectSchema);
 const Expert = mongoose.model('Expert', ExpertSchema);
 
-// Routes
+// ===== ROOT AND HEALTH ROUTES =====
+app.get('/', (req, res) => {
+  res.json({
+    message: '🚀 AFH Platform API is running successfully!',
+    status: 'OK',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: [
+      '/api/market-signals',
+      '/api/playbooks',
+      '/api/projects',
+      '/api/experts',
+      '/api/analyze-partnership',
+      '/api/ai/chat',
+      '/api/ai/generate-email',
+      '/api/ai/analyze-trends',
+      '/api/ai/generate-playbook',
+      '/health'
+    ]
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ===== API ROUTES =====
 
 // Market Signals
 app.get('/api/market-signals', async (req, res) => {
@@ -99,6 +236,8 @@ app.post('/api/market-signals', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+// AI Routes
 app.post('/api/ai/chat', async (req, res) => {
   try {
     const { prompt, context, agentType } = req.body;
@@ -191,6 +330,7 @@ app.post('/api/ai/generate-playbook', async (req, res) => {
     });
   }
 });
+
 // Playbooks
 app.get('/api/playbooks', async (req, res) => {
   try {
