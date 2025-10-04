@@ -22,8 +22,7 @@ import {
   DialogActions
 } from '@mui/material';
 import { Search, TrendingUp, Warning, Restaurant, LocalCafe, Business, Add } from '@mui/icons-material';
-import { marketMappingAPI } from '../services/api';
-
+import { marketMappingApi } from '../services/api';
 const MarketMapping = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [marketData, setMarketData] = useState([]);
