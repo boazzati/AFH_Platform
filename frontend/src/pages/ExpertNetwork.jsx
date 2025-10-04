@@ -31,7 +31,7 @@ import {
   Verified,
   TrendingUp
 } from '@mui/icons-material';
-
+import { expertNetworkApi } from '../services/api';
 const ExpertNetwork = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState(0);
