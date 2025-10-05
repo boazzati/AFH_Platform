@@ -17,8 +17,12 @@ import {
   SmartToy,
   Analytics
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import { dashboardApi } from '../services/api';
+
 const Dashboard = () => {
+  const navigate = useNavigate(); // Add this hook
+
   const modules = [
     {
       title: 'AFH Market Mapping',
@@ -71,6 +75,11 @@ const Dashboard = () => {
     }
   ];
 
+  // Add this function to handle navigation
+  const handleExplore = (path) => {
+    navigate(path);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
@@ -113,6 +122,7 @@ const Dashboard = () => {
                       color: 'white'
                     }
                   }}
+                  onClick={() => handleExplore(module.path)} // Add onClick handler
                 >
                   Explore
                 </Button>
