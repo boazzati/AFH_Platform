@@ -17,11 +17,11 @@ import {
   SmartToy,
   Analytics
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom'; // ← ONLY ADDED THIS IMPORT
 import { dashboardApi } from '../services/api';
 
 const Dashboard = () => {
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate(); // ← ONLY ADDED THIS LINE
 
   const modules = [
     {
@@ -75,7 +75,7 @@ const Dashboard = () => {
     }
   ];
 
-  // Add this function to handle navigation
+  // ← ADDED THIS FUNCTION
   const handleExplore = (path) => {
     navigate(path);
   };
@@ -122,7 +122,7 @@ const Dashboard = () => {
                       color: 'white'
                     }
                   }}
-                  onClick={() => handleExplore(module.path)} // Add onClick handler
+                  onClick={() => handleExplore(module.path)} // ← ADDED THIS LINE
                 >
                   Explore
                 </Button>
