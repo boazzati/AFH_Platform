@@ -424,93 +424,94 @@ try {
   crawler = null;
 }
 
+// ===== WEB CRAWLER ROUTES =====
+const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
+const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY || 'your-crawl4ai-api-key-here';
+
 // Web Crawler Routes
 app.post('/api/crawl/website', async (req, res) => {
-  if (!crawler) {
-    return res.status(500).json({
-      success: false,
-      message: 'Crawler not available - crawl4ai failed to initialize'
-    });
-  }
-
   try {
     const { url, extractRules } = req.body;
     
-    const result = await crawler.run(url, {
-      extractRules,
-      waitFor: 2000,
-      timeout: 30000
+    const response = await axios.post(`${CRAWL4AI_API_URL}/v1/crawl`, {
+      url,
+      options: {
+        extract_rules: extractRules,
+        wait_for: 2000,
+        timeout: 30000
+      }
+    }, {
+      headers: {
+        'x-api-key': CRAWL4AI_API_KEY,
+        'Content-Type': 'application/json'
+      }
     });
 
     res.json({
       success: true,
-      data: {
-        content: result.content,
-        markdown: result.markdown,
-        links: result.links,
-        metadata: result.metadata
-      }
+      data: response.data
     });
   } catch (error) {
-    console.error('Crawling error:', error);
+    console.error('Crawling error:', error.response?.data || error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to crawl website',
-      error: error.message
+      error: error.response?.data?.detail || error.message
     });
   }
 });
 
 app.post('/api/crawl/menu-data', async (req, res) => {
-  if (!crawler) {
-    return res.status(500).json({
-      success: false,
-      message: 'Crawler not available - crawl4ai failed to initialize'
-    });
-  }
-
   try {
     const { restaurantUrl } = req.body;
     
-    const result = await crawler.run(restaurantUrl, {
-      extractRules: {
-        menuItems: {
-          selector: '.menu-item, .dish, [class*="menu"]',
-          type: 'multiple',
-          attributes: {
-            name: '.item-name, .dish-name',
-            price: '.price, .cost',
-            description: '.description, .ingredients',
-            category: '.category, .menu-category'
+    const response = await axios.post(`${CRAWL4AI_API_URL}/v1/crawl`, {
+      url: restaurantUrl,
+      options: {
+        extract_rules: {
+          menuItems: {
+            selector: '.menu-item, .dish, [class*="menu"]',
+            type: 'multiple',
+            attributes: {
+              name: '.item-name, .dish-name',
+              price: '.price, .cost',
+              description: '.description, .ingredients',
+              category: '.category, .menu-category'
+            }
+          },
+          restaurantInfo: {
+            selector: '.restaurant-info, [class*="info"]',
+            type: 'single',
+            attributes: {
+              name: 'h1, .restaurant-name',
+              address: '.address, [class*="address"]',
+              phone: '.phone, [class*="phone"]'
+            }
           }
         },
-        restaurantInfo: {
-          selector: '.restaurant-info, [class*="info"]',
-          type: 'single',
-          attributes: {
-            name: 'h1, .restaurant-name',
-            address: '.address, [class*="address"]',
-            phone: '.phone, [class*="phone"]'
-          }
-        }
+        wait_for: 2000,
+        timeout: 30000
+      }
+    }, {
+      headers: {
+        'x-api-key': CRAWL4AI_API_KEY,
+        'Content-Type': 'application/json'
       }
     });
 
     res.json({
       success: true,
-      restaurantData: result.content
+      restaurantData: response.data
     });
   } catch (error) {
-    console.error('Menu crawling error:', error);
+    console.error('Menu crawling error:', error.response?.data || error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to crawl menu data',
-      error: error.message
+      error: error.response?.data?.detail || error.message
     });
   }
 });
-// ===== END WEB CRAWLER ROUTES =====
-
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
