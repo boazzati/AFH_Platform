@@ -1,27 +1,24 @@
-FROM node:18-alpine
+FROM node:18-bullseye
 
-# Install system dependencies
-RUN apk update && apk add --no-cache \
+# Install system dependencies including Chromium
+RUN apt-get update && apt-get install -y \
     chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
     git \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Puppeteer
+# Set Puppeteer to use system Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Create app directory
+# Set Node.js memory limit
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
 # Install dependencies
@@ -30,8 +27,6 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Expose port
 EXPOSE 3001
 
-# Start the application
 CMD ["npm", "start"]
