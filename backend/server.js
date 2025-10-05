@@ -10,12 +10,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://boazzati_db_user:yG2V1BCjEoYFzErP@cluster0.enxvd6p.mongodb.net/afh-platform?retryWrites=true&w=majority&appName=Cluster0';
+// MongoDB Connection with better error handling
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb+srv://boazzati_db_user:yG2V1BCjEoYFzErP@cluster0.enxvd6p.mongodb.net/afh-platform?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('📊 MongoDB: Connected successfully');
+})
+.catch((error) => {
+  console.error('📊 MongoDB: Connection failed:', error.message);
+});
+
+// MongoDB connection events
+mongoose.connection.on('connected', () => {
+  console.log('📊 MongoDB: Connected to database');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('📊 MongoDB: Connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('📊 MongoDB: Disconnected');
 });
 
 // Initialize OpenAI
@@ -501,7 +520,7 @@ app.post('/api/crawl/menu-data', async (req, res) => {
     });
   }
 });
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
