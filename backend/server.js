@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { OpenAI } = require('openai');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
