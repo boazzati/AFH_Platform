@@ -410,7 +410,84 @@ app.post('/api/analyze-partnership', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// ===== WEB CRAWLER ROUTES =====
+const { Crawler } = require('crawl4ai');
 
+// Initialize crawler
+const crawler = new Crawler();
+
+// Web Crawler Routes
+app.post('/api/crawl/website', async (req, res) => {
+  try {
+    const { url, extractRules } = req.body;
+    
+    const result = await crawler.run(url, {
+      extractRules,
+      waitFor: 2000, // wait for 2 seconds
+      timeout: 30000 // 30 second timeout
+    });
+
+    res.json({
+      success: true,
+      data: {
+        content: result.content,
+        markdown: result.markdown,
+        links: result.links,
+        metadata: result.metadata
+      }
+    });
+  } catch (error) {
+    console.error('Crawling error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to crawl website',
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/crawl/menu-data', async (req, res) => {
+  try {
+    const { restaurantUrl } = req.body;
+    
+    // Specialized crawler for restaurant menu data
+    const result = await crawler.run(restaurantUrl, {
+      extractRules: {
+        menuItems: {
+          selector: '.menu-item, .dish, [class*="menu"]',
+          type: 'multiple',
+          attributes: {
+            name: '.item-name, .dish-name',
+            price: '.price, .cost',
+            description: '.description, .ingredients',
+            category: '.category, .menu-category'
+          }
+        },
+        restaurantInfo: {
+          selector: '.restaurant-info, [class*="info"]',
+          type: 'single',
+          attributes: {
+            name: 'h1, .restaurant-name',
+            address: '.address, [class*="address"]',
+            phone: '.phone, [class*="phone"]'
+          }
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      restaurantData: result.content
+    });
+  } catch (error) {
+    console.error('Menu crawling error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to crawl menu data'
+    });
+  }
+});
+// ===== END WEB CRAWLER ROUTES =====
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
