@@ -202,6 +202,8 @@ app.get('/', (req, res) => {
       '/api/ai/generate-email',
       '/api/ai/analyze-trends',
       '/api/ai/generate-playbook',
+      '/api/crawl/website',
+      '/api/crawl/menu-data',
       '/health'
     ]
   });
@@ -410,21 +412,34 @@ app.post('/api/analyze-partnership', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // ===== WEB CRAWLER ROUTES =====
-const { Crawler } = require('crawl4ai');
-
-// Initialize crawler
-const crawler = new Crawler();
+let crawler;
+try {
+  const { Crawler } = require('crawl4ai');
+  crawler = new Crawler();
+  console.log('✅ crawl4ai initialized successfully');
+} catch (error) {
+  console.error('❌ crawl4ai failed to initialize:', error.message);
+  crawler = null;
+}
 
 // Web Crawler Routes
 app.post('/api/crawl/website', async (req, res) => {
+  if (!crawler) {
+    return res.status(500).json({
+      success: false,
+      message: 'Crawler not available - crawl4ai failed to initialize'
+    });
+  }
+
   try {
     const { url, extractRules } = req.body;
     
     const result = await crawler.run(url, {
       extractRules,
-      waitFor: 2000, // wait for 2 seconds
-      timeout: 30000 // 30 second timeout
+      waitFor: 2000,
+      timeout: 30000
     });
 
     res.json({
@@ -447,80 +462,16 @@ app.post('/api/crawl/website', async (req, res) => {
 });
 
 app.post('/api/crawl/menu-data', async (req, res) => {
-  try {
-    const { restaurantUrl } = req.body;
-    
-    // Specialized crawler for restaurant menu data
-    const result = await crawler.run(restaurantUrl, {
-      extractRules: {
-        menuItems: {
-          selector: '.menu-item, .dish, [class*="menu"]',
-          type: 'multiple',
-          attributes: {
-            name: '.item-name, .dish-name',
-            price: '.price, .cost',
-            description: '.description, .ingredients',
-            category: '.category, .menu-category'
-          }
-        },
-        restaurantInfo: {
-          selector: '.restaurant-info, [class*="info"]',
-          type: 'single',
-          attributes: {
-            name: 'h1, .restaurant-name',
-            address: '.address, [class*="address"]',
-            phone: '.phone, [class*="phone"]'
-          }
-        }
-      }
-    });
-
-    res.json({
-      success: true,
-      restaurantData: result.content
-    });
-  } catch (error) {
-    // ===== WEB CRAWLER ROUTES =====
-const { Crawler } = require('crawl4ai');
-
-// Initialize crawler
-const crawler = new Crawler();
-
-// Web Crawler Routes
-app.post('/api/crawl/website', async (req, res) => {
-  try {
-    const { url, extractRules } = req.body;
-    
-    const result = await crawler.run(url, {
-      extractRules,
-      waitFor: 2000, // wait for 2 seconds
-      timeout: 30000 // 30 second timeout
-    });
-
-    res.json({
-      success: true,
-      data: {
-        content: result.content,
-        markdown: result.markdown,
-        links: result.links,
-        metadata: result.metadata
-      }
-    });
-  } catch (error) {
-    console.error('Crawling error:', error);
-    res.status(500).json({
+  if (!crawler) {
+    return res.status(500).json({
       success: false,
-      message: 'Failed to crawl website',
-      error: error.message
+      message: 'Crawler not available - crawl4ai failed to initialize'
     });
   }
-});
 
-app.post('/api/crawl/menu-data', async (req, res) => {
   try {
     const { restaurantUrl } = req.body;
     
-    // Specialized crawler for restaurant menu data
     const result = await crawler.run(restaurantUrl, {
       extractRules: {
         menuItems: {
@@ -553,12 +504,17 @@ app.post('/api/crawl/menu-data', async (req, res) => {
     console.error('Menu crawling error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to crawl menu data'
+      message: 'Failed to crawl menu data',
+      error: error.message
     });
   }
 });
 // ===== END WEB CRAWLER ROUTES =====
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+  console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing API Key'}`);
+  console.log(`🕷️  Crawler: ${crawler ? 'Available' : 'Unavailable'}`);
 });
