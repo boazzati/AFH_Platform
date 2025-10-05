@@ -414,17 +414,6 @@ app.post('/api/analyze-partnership', async (req, res) => {
 });
 
 // ===== WEB CRAWLER ROUTES =====
-let crawler;
-try {
-  const { Crawler } = require('crawl4ai');
-  crawler = new Crawler();
-  console.log('✅ crawl4ai initialized successfully');
-} catch (error) {
-  console.error('❌ crawl4ai failed to initialize:', error.message);
-  crawler = null;
-}
-
-// ===== WEB CRAWLER ROUTES =====
 const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
 const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY || 'your-crawl4ai-api-key-here';
 
