@@ -506,5 +506,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
   console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing API Key'}`);
-  console.log(`🕷️  Crawler: ${crawler ? 'Available' : 'Unavailable'}`);
+  console.log(`🕷️  Crawler: Available (External Service)`);
 });
