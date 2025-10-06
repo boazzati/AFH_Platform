@@ -442,19 +442,24 @@ app.post('/api/crawl/website', async (req, res) => {
   try {
     const { url, extractRules } = req.body;
     
-    const response = await axios.post(`${CRAWL4AI_API_URL}/v1/crawl`, {
-      url,
-      options: {
-        extract_rules: extractRules,
-        wait_for: 2000,
-        timeout: 30000
-      }
-    }, {
-      headers: {
-        'x-api-key': CRAWL4AI_API_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+   // Corrected API call format
+const response = await axios.post(
+  'https://crawl4ai-production-5e82.up.railway.app/crawl',
+  {
+    urls: ["https://example.com"],  // Array of URLs
+    options: {
+      extract_rules: extractRules,
+      wait_for: 2000,
+      timeout: 30000
+    }
+  },
+  {
+    headers: {
+      'Content-Type': 'application/json'
+      // Add authentication if configured
+    }
+  }
+);
 
     res.json({
       success: true,
