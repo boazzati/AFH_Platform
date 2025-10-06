@@ -24,15 +24,19 @@ app.use(express.json());
 // MongoDB Connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb+srv://boazzati_db_user:yG2V1BCjEoYFzErP@cluster0.enxvd6p.mongodb.net/afh-platform?retryWrites=true&w=majority&appName=Cluster0';
 
+// Add connection options for better stability
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000, // 30 seconds timeout
+  socketTimeoutMS: 45000, // 45 seconds socket timeout
 })
 .then(() => {
   console.log('📊 MongoDB: Connected successfully');
 })
 .catch((error) => {
   console.error('📊 MongoDB: Connection failed:', error.message);
+  process.exit(1); // Exit if DB connection fails
 });
 
 // MongoDB connection events
@@ -48,7 +52,10 @@ mongoose.connection.on('disconnected', () => {
   console.log('📊 MongoDB: Disconnected');
 });
 
-// Initialize OpenAI
+// Initialize OpenAI with validation
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY is not set in environment variables');
+}
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -170,7 +177,7 @@ const MarketSignalSchema = new mongoose.Schema({
   description: String,
   potentialValue: String,
   confidence: Number,
-  timestamp: Date,
+  timestamp: { type: Date, default: Date.now },
   source: String,
   category: String
 });
@@ -180,7 +187,7 @@ const PlaybookSchema = new mongoose.Schema({
   channel: String,
   version: String,
   successRate: Number,
-  lastUpdated: Date,
+  lastUpdated: { type: Date, default: Date.now },
   description: String,
   sections: [String],
   aiGenerated: Boolean,
@@ -196,7 +203,7 @@ const ProjectSchema = new mongoose.Schema({
   timeline: String,
   risks: [String],
   nextSteps: [String],
-  lastUpdate: Date,
+  lastUpdate: { type: Date, default: Date.now },
   performanceMetrics: Object
 });
 
@@ -240,10 +247,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  const openAIConfigured = !!process.env.OPENAI_API_KEY;
+  
   res.json({ 
     status: 'healthy',
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
+    database: dbStatus,
+    openai: openAIConfigured ? 'configured' : 'missing',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -255,16 +267,21 @@ app.get('/api/market-signals', async (req, res) => {
     const signals = await MarketSignal.find().sort({ timestamp: -1 });
     res.json(signals);
   } catch (error) {
+    console.error('Market signals fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.post('/api/market-signals', async (req, res) => {
   try {
-    const signal = new MarketSignal(req.body);
+    const signal = new MarketSignal({
+      ...req.body,
+      timestamp: new Date()
+    });
     await signal.save();
     res.status(201).json(signal);
   } catch (error) {
+    console.error('Market signal creation error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -273,6 +290,13 @@ app.post('/api/market-signals', async (req, res) => {
 app.post('/api/ai/chat', async (req, res) => {
   try {
     const { prompt, context, agentType } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        message: 'Prompt is required'
+      });
+    }
     
     let systemContext = '';
     switch (agentType) {
@@ -310,6 +334,13 @@ app.post('/api/ai/generate-email', async (req, res) => {
   try {
     const { account, channel, context } = req.body;
     
+    if (!account || !channel) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account and channel are required'
+      });
+    }
+    
     const email = await OpenAIService.generateOutreachEmail(account, channel, context);
     
     res.json({
@@ -329,6 +360,13 @@ app.post('/api/ai/analyze-trends', async (req, res) => {
   try {
     const { data, channel } = req.body;
     
+    if (!data || !channel) {
+      return res.status(400).json({
+        success: false,
+        message: 'Data and channel are required'
+      });
+    }
+    
     const analysis = await OpenAIService.analyzeMarketTrends(data, channel);
     
     res.json({
@@ -347,6 +385,13 @@ app.post('/api/ai/analyze-trends', async (req, res) => {
 app.post('/api/ai/generate-playbook', async (req, res) => {
   try {
     const { channels, accountType, objectives } = req.body;
+    
+    if (!channels || !accountType || !objectives) {
+      return res.status(400).json({
+        success: false,
+        message: 'Channels, accountType, and objectives are required'
+      });
+    }
     
     const strategy = await OpenAIService.generatePlaybookStrategy(channels, accountType, objectives);
     
@@ -369,16 +414,21 @@ app.get('/api/playbooks', async (req, res) => {
     const playbooks = await Playbook.find().sort({ lastUpdated: -1 });
     res.json(playbooks);
   } catch (error) {
+    console.error('Playbooks fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.post('/api/playbooks', async (req, res) => {
   try {
-    const playbook = new Playbook(req.body);
+    const playbook = new Playbook({
+      ...req.body,
+      lastUpdated: new Date()
+    });
     await playbook.save();
     res.status(201).json(playbook);
   } catch (error) {
+    console.error('Playbook creation error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -389,16 +439,21 @@ app.get('/api/projects', async (req, res) => {
     const projects = await Project.find().sort({ lastUpdate: -1 });
     res.json(projects);
   } catch (error) {
+    console.error('Projects fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.post('/api/projects', async (req, res) => {
   try {
-    const project = new Project(req.body);
+    const project = new Project({
+      ...req.body,
+      lastUpdate: new Date()
+    });
     await project.save();
     res.status(201).json(project);
   } catch (error) {
+    console.error('Project creation error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -409,6 +464,7 @@ app.get('/api/experts', async (req, res) => {
     const experts = await Expert.find();
     res.json(experts);
   } catch (error) {
+    console.error('Experts fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -439,6 +495,7 @@ app.post('/api/analyze-partnership', async (req, res) => {
 
     res.json(analysis);
   } catch (error) {
+    console.error('Partnership analysis error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -452,10 +509,24 @@ app.post('/api/crawl/website', async (req, res) => {
   try {
     const { url, extractRules } = req.body;
     
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        message: 'URL is required'
+      });
+    }
+    
+    if (!CRAWL4AI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'Crawl4AI API key is not configured'
+      });
+    }
+
     const response = await axios.post(
-      'https://crawl4ai-production-5e82.up.railway.app/crawl',
+      `${CRAWL4AI_API_URL}/crawl`,
       {
-        urls: [url],  // Use the actual URL from request
+        urls: [url],
         options: {
           extract_rules: extractRules,
           wait_for: 2000,
@@ -466,7 +537,8 @@ app.post('/api/crawl/website', async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': CRAWL4AI_API_KEY
-        }
+        },
+        timeout: 45000 // 45 second timeout
       }
     );
 
@@ -488,8 +560,22 @@ app.post('/api/crawl/menu-data', async (req, res) => {
   try {
     const { restaurantUrl } = req.body;
     
+    if (!restaurantUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Restaurant URL is required'
+      });
+    }
+    
+    if (!CRAWL4AI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'Crawl4AI API key is not configured'
+      });
+    }
+
     const response = await axios.post(
-      'https://crawl4ai-production-5e82.up.railway.app/crawl',
+      `${CRAWL4AI_API_URL}/crawl`,
       {
         urls: [restaurantUrl],
         options: {
@@ -522,7 +608,8 @@ app.post('/api/crawl/menu-data', async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': CRAWL4AI_API_KEY
-        }
+        },
+        timeout: 45000 // 45 second timeout
       }
     );
 
@@ -540,10 +627,53 @@ app.post('/api/crawl/menu-data', async (req, res) => {
   }
 });
 
+// 404 handler - must be after all routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.originalUrl}`
+  });
+});
+
+// Global error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? {} : error.message
+  });
+});
+
+// Server configuration for Railway
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, "0.0.0.0", function () {
+const HOST = '0.0.0.0'; // Critical for Railway deployment
+
+const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
   console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing API Key'}`);
-  console.log(`🕷️  Crawler: Available (External Service)`);
+  console.log(`🕷️ Crawler: ${CRAWL4AI_API_KEY ? 'Available (External Service)' : 'Unavailable - No API Key'}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+    mongoose.connection.close();
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+    mongoose.connection.close();
+    process.exit(0);
+  });
+});
+
+module.exports = app;
