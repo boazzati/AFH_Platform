@@ -8,8 +8,18 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
+// Middleware - Update CORS to allow your Netlify domain
+app.use(cors({;
 app.use(express.json());
+origin: [
+    'https://afhapp.netlify.app',  // Your Netlify frontend
+    'http://localhost:3000',       // Local development
+    'http://localhost:5173'        // Vite dev server
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+}));
 
 // MongoDB Connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb+srv://boazzati_db_user:yG2V1BCjEoYFzErP@cluster0.enxvd6p.mongodb.net/afh-platform?retryWrites=true&w=majority&appName=Cluster0';
