@@ -502,7 +502,7 @@ app.post('/api/analyze-partnership', async (req, res) => {
 
 // ===== WEB CRAWLER ROUTES =====
 const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
-const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY;
+const CRAWL4AI_API_KEY = process.env.=61503ed921cecc510501589acfdbfcbe59f28c4e2f69f500780204e6263e1be9;
 
 // Web Crawler Routes
 app.post('/api/crawl/website', async (req, res) => {
