@@ -434,7 +434,7 @@ app.post('/api/analyze-partnership', async (req, res) => {
 });
 
 // ===== WEB CRAWLER ROUTES =====
-const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
+const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app/api';
 const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY;
 // Web Crawler Routes
 // Web Crawler Routes
