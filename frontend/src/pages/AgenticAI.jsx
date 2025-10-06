@@ -32,7 +32,7 @@ import {
   Campaign,
   Refresh
 } from '@mui/icons-material';
-import { agenticAIApi } from '../services/api'; // Updated import
+import { agenticAIApi } from '../services/api';
 
 const AgenticAI = () => {
   const [prompt, setPrompt] = useState('');
@@ -96,23 +96,27 @@ const AgenticAI = () => {
     setIsProcessing(true);
 
     try {
-      const response = await agenticAIApi.chat({ // Updated API call
+      const response = await agenticAIApi.chat({
         prompt,
         context: `User is asking about AFH channel strategies. Current agent: ${currentAgent?.name}`,
         agentType: selectedAgent
       });
 
+      // Fixed: Use response.data directly instead of response.data.response
       const aiResponse = {
         role: 'ai',
-        content: response.data.response
+        content: response.data.response || response.data
       };
       
       setConversation(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('AI Chat Error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       const errorResponse = {
         role: 'ai',
-        content: 'I apologize, but I encountered an error processing your request. Please try again.'
+        content: `I apologize, but I encountered an error: ${error.response?.data?.message || error.message}. Please try again.`
       };
       setConversation(prev => [...prev, errorResponse]);
     } finally {
