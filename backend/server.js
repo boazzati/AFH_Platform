@@ -541,9 +541,7 @@ app.post('/api/crawl/menu-data', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(port, "0.0.0.0", function () { // ✅ Correctly binds to 0.0.0.0
-  console.log(`🚀 Server running on port ${port}`);
-});
+app.listen(PORT, "0.0.0.0", function () {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
   console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing API Key'}`);
