@@ -7,11 +7,9 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 // Middleware - Update CORS to allow your Netlify domain
-app.use(cors({;
-app.use(express.json());
-origin: [
+app.use(cors({
+  origin: [
     'https://afhapp.netlify.app',  // Your Netlify frontend
     'http://localhost:3000',       // Local development
     'http://localhost:5173'        // Vite dev server
@@ -20,6 +18,8 @@ origin: [
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 }));
+
+app.use(express.json());
 
 // MongoDB Connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb+srv://boazzati_db_user:yG2V1BCjEoYFzErP@cluster0.enxvd6p.mongodb.net/afh-platform?retryWrites=true&w=majority&appName=Cluster0';
@@ -444,32 +444,31 @@ app.post('/api/analyze-partnership', async (req, res) => {
 });
 
 // ===== WEB CRAWLER ROUTES =====
-const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app/api';
+const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
 const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY;
-// Web Crawler Routes
+
 // Web Crawler Routes
 app.post('/api/crawl/website', async (req, res) => {
   try {
     const { url, extractRules } = req.body;
     
-   // Corrected API call format
-const response = await axios.post(
-  'https://crawl4ai-production-5e82.up.railway.app/crawl',
-  {
-    urls: ["https://example.com"],  // Array of URLs
-    options: {
-      extract_rules: extractRules,
-      wait_for: 2000,
-      timeout: 30000
-    }
-  },
-  {
-    headers: {
-      'Content-Type': 'application/json'
-      // Add authentication if configured
-    }
-  }
-);
+    const response = await axios.post(
+      'https://crawl4ai-production-5e82.up.railway.app/crawl',
+      {
+        urls: [url],  // Use the actual URL from request
+        options: {
+          extract_rules: extractRules,
+          wait_for: 2000,
+          timeout: 30000
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CRAWL4AI_API_KEY
+        }
+      }
+    );
 
     res.json({
       success: true,
@@ -489,39 +488,43 @@ app.post('/api/crawl/menu-data', async (req, res) => {
   try {
     const { restaurantUrl } = req.body;
     
-    const response = await axios.post(`${CRAWL4AI_API_URL}/v1/crawl`, {
-      url: restaurantUrl,
-      options: {
-        extract_rules: {
-          menuItems: {
-            selector: '.menu-item, .dish, [class*="menu"]',
-            type: 'multiple',
-            attributes: {
-              name: '.item-name, .dish-name',
-              price: '.price, .cost',
-              description: '.description, .ingredients',
-              category: '.category, .menu-category'
+    const response = await axios.post(
+      'https://crawl4ai-production-5e82.up.railway.app/crawl',
+      {
+        urls: [restaurantUrl],
+        options: {
+          extract_rules: {
+            menuItems: {
+              selector: '.menu-item, .dish, [class*="menu"]',
+              type: 'multiple',
+              attributes: {
+                name: '.item-name, .dish-name',
+                price: '.price, .cost',
+                description: '.description, .ingredients',
+                category: '.category, .menu-category'
+              }
+            },
+            restaurantInfo: {
+              selector: '.restaurant-info, [class*="info"]',
+              type: 'single',
+              attributes: {
+                name: 'h1, .restaurant-name',
+                address: '.address, [class*="address"]',
+                phone: '.phone, [class*="phone"]'
+              }
             }
           },
-          restaurantInfo: {
-            selector: '.restaurant-info, [class*="info"]',
-            type: 'single',
-            attributes: {
-              name: 'h1, .restaurant-name',
-              address: '.address, [class*="address"]',
-              phone: '.phone, [class*="phone"]'
-            }
-          }
-        },
-        wait_for: 2000,
-        timeout: 30000
+          wait_for: 2000,
+          timeout: 30000
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CRAWL4AI_API_KEY
+        }
       }
-    }, {
-      headers: {
-        'x-api-key': CRAWL4AI_API_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+    );
 
     res.json({
       success: true,
@@ -536,6 +539,7 @@ app.post('/api/crawl/menu-data', async (req, res) => {
     });
   }
 });
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
