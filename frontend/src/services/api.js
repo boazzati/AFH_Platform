@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://afhapp-1f9346a8427b.herokuapp.com/api'  // Correct Heroku backend
-  : 'http://localhost:3001/api';  // Fixed port
+  ? 'https://afhplatform-production.up.railway.app'  // New Railway backend
+  : 'http://localhost:3001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
