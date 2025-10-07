@@ -1,4 +1,4 @@
-// Railway-optimized server
+// Railway-compliant server
 console.log('🚀 Starting AFH Platform server...');
 console.log('Node version:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'development');
@@ -9,13 +9,26 @@ console.log('✅ Express loaded');
 const app = express();
 console.log('✅ Express app created');
 
+// CORS configuration using environment variable
+const corsOptions = {
+  origin: process.env.CLIENT_URL || "https://afhapp.netlify.app", // Frontend URL from environment
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept'],
+  optionsSuccessStatus: 200
+};
+
+console.log('🌐 CORS origin set to:', corsOptions.origin);
+
 // CORS middleware
 app.use((req, res, next) => {
-  console.log(`📡 ${req.method} ${req.path} from ${req.headers.origin || 'no-origin'}`);
+  const origin = req.headers.origin;
+  console.log(`📡 ${req.method} ${req.path} from origin: ${origin || 'no-origin'}`);
   
-  res.header('Access-Control-Allow-Origin', 'https://afhapp.netlify.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept');
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', corsOptions.origin);
+  res.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+  res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
   res.header('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
@@ -29,7 +42,18 @@ app.use((req, res, next) => {
 app.use(express.json());
 console.log('✅ Middleware configured');
 
-// Routes
+// Health check endpoint
+app.get('/health', (req, res) => {
+  console.log('🏥 Health check');
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    cors: corsOptions.origin
+  });
+});
+
+// Root endpoint
 app.get('/', (req, res) => {
   console.log('🏠 Root endpoint accessed');
   res.json({
@@ -37,21 +61,15 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     status: 'OK',
     node: process.version,
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'development',
+    cors: corsOptions.origin
   });
 });
 
-app.get('/health', (req, res) => {
-  console.log('🏥 Health check');
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
+// AI Chat endpoint
 app.post('/api/ai/chat', (req, res) => {
   console.log('🤖 AI Chat endpoint accessed');
+  console.log('Request origin:', req.headers.origin);
   console.log('Request body:', req.body);
   
   const { prompt } = req.body;
@@ -64,11 +82,12 @@ app.post('/api/ai/chat', (req, res) => {
     });
   }
   
-  console.log('✅ Sending response');
+  console.log('✅ Sending AI response');
   res.json({
     success: true,
-    response: `Echo: ${prompt} (Railway CORS working!)`,
-    timestamp: new Date().toISOString()
+    response: `AI Response: ${prompt} (CORS working on Railway!)`,
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin
   });
 });
 
@@ -91,16 +110,19 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Server startup - Railway provides PORT via environment variable
-const PORT = process.env.PORT || 3000;
-console.log(`🔧 Attempting to start server on port ${PORT}`);
-console.log(`🌍 PORT environment variable: ${process.env.PORT || 'not set'}`);
+// Railway server startup - let Railway assign the port automatically
+const PORT = process.env.PORT;
+console.log(`🔧 Railway PORT environment variable: ${PORT || 'not set'}`);
+
+if (!PORT) {
+  console.log('⚠️  No PORT environment variable - Railway should set this automatically');
+}
 
 try {
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🎉 Server successfully started on port ${PORT}`);
-    console.log(`🌐 Server accessible at http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, () => {
+    console.log(`🎉 Server successfully started on Railway-assigned port: ${PORT}`);
     console.log('✅ Ready to accept connections');
+    console.log('🌐 CORS configured for:', corsOptions.origin);
   });
 
   server.on('error', (error) => {
@@ -108,6 +130,7 @@ try {
     if (error.code === 'EADDRINUSE') {
       console.error(`Port ${PORT} is already in use`);
     }
+    process.exit(1);
   });
 
   // Graceful shutdown
@@ -132,6 +155,6 @@ try {
   process.exit(1);
 }
 
-console.log('📝 Server setup complete');
+console.log('📝 Server setup complete - waiting for Railway PORT assignment');
 
 module.exports = app;
