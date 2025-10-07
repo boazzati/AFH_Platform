@@ -16,10 +16,12 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('Request from origin:', origin);
     // Allow requests with no origin (like mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('Origin allowed:', origin);
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
@@ -34,6 +36,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 // ===== END CORS CONFIGURATION =====
+
 app.use(express.json());
 
 // MongoDB Connection with better error handling
@@ -51,7 +54,7 @@ mongoose.connect(MONGODB_URI, {
 })
 .catch((error) => {
   console.error('📊 MongoDB: Connection failed:', error.message);
-  process.exit(1); // Exit if DB connection fails
+  // Don't exit on DB connection failure, let the app run
 });
 
 // MongoDB connection events
@@ -244,6 +247,7 @@ app.get('/', (req, res) => {
     status: 'OK',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
+    cors: 'Fixed',
     endpoints: [
       '/api/market-signals',
       '/api/playbooks',
@@ -270,7 +274,8 @@ app.get('/health', (req, res) => {
     database: dbStatus,
     openai: openAIConfigured ? 'configured' : 'missing',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    cors: 'configured'
   });
 });
 
@@ -304,6 +309,7 @@ app.post('/api/market-signals', async (req, res) => {
 // AI Routes
 app.post('/api/ai/chat', async (req, res) => {
   try {
+    console.log('AI Chat endpoint hit from origin:', req.headers.origin);
     const { prompt, context, agentType } = req.body;
     
     if (!prompt) {
@@ -328,12 +334,13 @@ app.post('/api/ai/chat', async (req, res) => {
         systemContext = 'You are an AFH channel strategist for CPG companies.';
     }
 
-    const response = await OpenAIService.generateMarketInsights(prompt, systemContext + ' ' + context);
+    const response = await OpenAIService.generateMarketInsights(prompt, systemContext + ' ' + (context || ''));
     
     res.json({
       success: true,
       response,
-      agent: agentType
+      agent: agentType,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('AI Chat Error:', error);
@@ -517,7 +524,7 @@ app.post('/api/analyze-partnership', async (req, res) => {
 
 // ===== WEB CRAWLER ROUTES =====
 const CRAWL4AI_API_URL = process.env.CRAWL4AI_API_URL || 'https://crawl4ai-production-5e82.up.railway.app';
-const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY; // ✅ FIXED: Use environment variable
+const CRAWL4AI_API_KEY = process.env.CRAWL4AI_API_KEY;
 
 // Web Crawler Routes
 app.post('/api/crawl/website', async (req, res) => {
@@ -670,6 +677,7 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing API Key'}`);
   console.log(`🕷️ Crawler: ${CRAWL4AI_API_KEY ? 'Available (External Service)' : 'Unavailable - No API Key'}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ CORS: Configured for origins: ${allowedOrigins.join(', ')}`);
 });
 
 // Graceful shutdown handling
