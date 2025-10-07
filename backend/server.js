@@ -91,9 +91,10 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Server startup
-const PORT = process.env.PORT || 3001;
+// Server startup - Railway provides PORT via environment variable
+const PORT = process.env.PORT || 3000;
 console.log(`🔧 Attempting to start server on port ${PORT}`);
+console.log(`🌍 PORT environment variable: ${process.env.PORT || 'not set'}`);
 
 try {
   const server = app.listen(PORT, '0.0.0.0', () => {
