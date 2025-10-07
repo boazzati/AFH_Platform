@@ -1,0 +1,99 @@
+From dd4d3066949cb93f11901258e64a7733a2302066 Mon Sep 17 00:00:00 2001
+From: boazzati <231980010+boazzati@users.noreply.github.com>
+Date: Tue, 7 Oct 2025 17:01:46 -0400
+Subject: [PATCH] Fix CORS configuration to resolve agentic AI network errors
+
+- Replace manual CORS headers with proper cors middleware
+- Add origin callback function to handle all cases correctly
+- Remove redundant OPTIONS handler
+- Ensure CORS headers are always sent for allowed origins
+- Add logging for blocked origins for debugging
+---
+ backend/server.js | 71 ++++++++++++++++++-----------------------------
+ 1 file changed, 27 insertions(+), 44 deletions(-)
+
+diff --git a/backend/server.js b/backend/server.js
+index 5feef01..511d24b 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -7,50 +7,33 @@ require('dotenv').config();
+ 
+ const app = express();
+ 
+-// Comprehensive CORS configuration
+-app.use((req, res, next) => {
+-  const allowedOrigins = [
+-    'https://afhapp.netlify.app',
+-    'http://localhost:3000',
+-    'http://localhost:5173'
+-  ];
+-  
+-  const origin = req.headers.origin;
+-  if (allowedOrigins.includes(origin)) {
+-    res.header('Access-Control-Allow-Origin', origin);
+-  }
+-  
+-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept');
+-  res.header('Access-Control-Allow-Credentials', 'true');
+-  res.header('Access-Control-Max-Age', '86400');
+-  
+-  // Handle preflight requests
+-  if (req.method === 'OPTIONS') {
+-    return res.status(200).end();
+-  }
+-  
+-  next();
+-});
+-// Handle preflight for all routes
+-app.options('*', (req, res) => {
+-  const allowedOrigins = [
+-    'https://afhapp.netlify.app',
+-    'http://localhost:3000',
+-    'http://localhost:5173'
+-  ];
+-  
+-  const origin = req.headers.origin;
+-  if (allowedOrigins.includes(origin)) {
+-    res.header('Access-Control-Allow-Origin', origin);
+-  }
+-  
+-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept');
+-  res.header('Access-Control-Allow-Credentials', 'true');
+-  res.header('Access-Control-Max-Age', '86400');
+-  res.status(200).end();
+-});
++// ===== CORRECTED CORS CONFIGURATION =====
++const allowedOrigins = [
++  'https://afhapp.netlify.app',
++  'http://localhost:3000',
++  'http://localhost:5173'
++];
++
++const corsOptions = {
++  origin: function (origin, callback) {
++    // Allow requests with no origin (like mobile apps, Postman, etc.)
++    if (!origin) return callback(null, true);
++    
++    if (allowedOrigins.indexOf(origin) !== -1) {
++      callback(null, true);
++    } else {
++      console.log('CORS blocked origin:', origin);
++      callback(new Error('Not allowed by CORS'), false);
++    }
++  },
++  credentials: true,
++  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
++  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept'],
++  optionsSuccessStatus: 200 // For legacy browser support
++};
++
++app.use(cors(corsOptions));
++// ===== END CORS CONFIGURATION =====
+ app.use(express.json());
+ 
+ // MongoDB Connection with better error handling
+-- 
+2.34.1
+
