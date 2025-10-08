@@ -68,12 +68,14 @@ export const crawlingAPI = {
 };
 
 // ALIASES (uppercase - for component compatibility)
-export const agenticAIApi = agenticAIApi;
 export const benchmarkingAPI = benchmarkingApi;
 export const dataIntegrationAPI = dataIntegrationApi;
 export const executionEngineAPI = executionEngineApi;
 export const expertNetworkAPI = expertNetworkApi;
 export const marketMappingAPI = marketMappingApi;
 export const playbookGeneratorAPI = playbookGeneratorApi;
+
+// Note: agenticAIApi is already exported above and doesn't need an alias
+// Note: crawlingAPI is already uppercase
 
 export default api;
