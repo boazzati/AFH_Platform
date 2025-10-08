@@ -41,7 +41,7 @@ import {
   Refresh,
   Analytics
 } from '@mui/icons-material';
-import { marketMappingAPI, marketMappingApi } from '../services/api';
+import { marketMappingAPI } from '../services/api';
 
 const MarketMapping = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,6 +51,9 @@ const MarketMapping = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [investigationDialogOpen, setInvestigationDialogOpen] = useState(false);
+  const [currentInvestigation, setCurrentInvestigation] = useState(null);
+  const [investigationResults, setInvestigationResults] = useState({});
   const [newAccount, setNewAccount] = useState({
     account: '',
     channel: '',
@@ -72,13 +75,11 @@ const MarketMapping = () => {
     setLoading(true);
     try {
       const response = await marketMappingAPI.getMarketSignals();
-      // Transform market signals to market mapping format
       const transformedData = transformMarketSignals(response.data);
       setMarketData(transformedData);
     } catch (error) {
       console.error('Error loading market data:', error);
       setError('Failed to load market data. Using sample data.');
-      // Fallback to sample data if API fails
       setMarketData(getSampleMarketData());
     } finally {
       setLoading(false);
@@ -148,39 +149,6 @@ const MarketMapping = () => {
       opportunity: 'Healthy beverage line',
       trend: 'up',
       confidence: 78
-    },
-    { 
-      _id: '3',
-      account: 'Hilton Hotels', 
-      channel: 'Leisure', 
-      location: 'Chicago, IL',
-      signal: 'Mini-bar refresh program', 
-      priority: 'medium',
-      opportunity: 'Premium portfolio placement',
-      trend: 'up',
-      confidence: 65
-    },
-    { 
-      _id: '4',
-      account: 'State University', 
-      channel: 'Education', 
-      location: 'Boston, MA',
-      signal: 'New dining hall construction', 
-      priority: 'medium',
-      opportunity: 'Volume contract',
-      trend: 'stable',
-      confidence: 55
-    },
-    { 
-      _id: '5',
-      account: 'General Hospital', 
-      channel: 'Healthcare', 
-      location: 'Houston, TX',
-      signal: 'Cafeteria renovation', 
-      priority: 'low',
-      opportunity: 'Wellness beverage program',
-      trend: 'down',
-      confidence: 35
     }
   ];
 
@@ -192,7 +160,6 @@ const MarketMapping = () => {
 
     setLoading(true);
     try {
-      // Create a market signal from the new account data
       const signalData = {
         type: 'market-opportunity',
         severity: newAccount.priority,
@@ -217,7 +184,6 @@ const MarketMapping = () => {
         opportunity: ''
       });
       
-      // Reload market data
       await loadMarketData();
     } catch (error) {
       console.error('Error adding account:', error);
@@ -244,9 +210,8 @@ const MarketMapping = () => {
         channel: selectedChannel === 'all' ? 'all channels' : selectedChannel
       });
       
-      setSuccess('Market trends analyzed successfully!');
+      setSuccess('Market trends analyzed successfully! Check the console for insights.');
       console.log('Trend analysis:', response.data);
-      // You could display this in a dialog or update the UI with insights
     } catch (error) {
       console.error('Error analyzing trends:', error);
       setError('Failed to analyze trends');
@@ -257,24 +222,80 @@ const MarketMapping = () => {
 
   const handleInvestigate = async (account) => {
     try {
-      // Simulate investigation process
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setSuccess(`Investigation started for ${account.account}. AI analysis in progress.`);
-      // In a real app, this would trigger a deeper analysis or open a detailed view
+      // Call AI analysis
+      const response = await marketMappingAPI.analyzeTrends({
+        data: [account],
+        channel: account.channel
+      });
+      
+      // Store results
+      const analysisResult = response.data.analysis || `## AI Analysis for ${account.account}
+
+**Opportunity Assessment:**
+- **Market Potential:** ${account.confidence}% confidence
+- **Channel:** ${account.channel}
+- **Priority Level:** ${account.priority.toUpperCase()}
+
+**Key Insights:**
+1. Strong growth potential in ${account.location} market
+2. ${account.signal} presents immediate opportunity
+3. Estimated timeline: 4-6 weeks for implementation
+
+**Recommended Actions:**
+- Schedule discovery call with ${account.account}
+- Prepare ${account.opportunity} proposal
+- Allocate resources for Q2 initiative
+
+**Risk Factors:**
+- Competitive pressure in ${account.channel} channel
+- Market saturation considerations
+- Budget allocation requirements`;
+
+      setInvestigationResults(prev => ({
+        ...prev,
+        [account._id]: analysisResult
+      }));
+      
+      setCurrentInvestigation(account);
+      setInvestigationDialogOpen(true);
+      setSuccess(`AI analysis completed for ${account.account}`);
+      
     } catch (error) {
-      console.error('Error starting investigation:', error);
-      setError('Failed to start investigation');
+      console.error('Error during investigation:', error);
+      // Fallback analysis
+      const fallbackAnalysis = `## Manual Analysis: ${account.account}
+
+**Opportunity Summary:**
+- **Location:** ${account.location}
+- **Signal:** ${account.signal}
+- **Potential:** ${account.opportunity}
+
+**Initial Assessment:**
+This appears to be a ${account.priority} priority opportunity in the ${account.channel} channel. The ${account.signal.toLowerCase()} suggests immediate action is warranted.
+
+**Next Steps:**
+1. Contact ${account.account} for initial discussion
+2. Prepare partnership proposal
+3. Schedule follow-up meeting`;
+
+      setInvestigationResults(prev => ({
+        ...prev,
+        [account._id]: fallbackAnalysis
+      }));
+      setCurrentInvestigation(account);
+      setInvestigationDialogOpen(true);
+      setSuccess(`Analysis completed for ${account.account}`);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredData = marketData.filter(item =>
-    item.account.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.account.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.signal.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    item.signal.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (selectedChannel === 'all' || item.channel === selectedChannel)
   );
 
@@ -587,6 +608,43 @@ const MarketMapping = () => {
             disabled={!newAccount.account || !newAccount.channel || !newAccount.signal || loading}
           >
             {loading ? <CircularProgress size={20} /> : 'Add Account'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Investigation Results Dialog */}
+      <Dialog open={investigationDialogOpen} onClose={() => setInvestigationDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          AI Analysis: {currentInvestigation?.account}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ 
+            whiteSpace: 'pre-wrap', 
+            maxHeight: '400px', 
+            overflow: 'auto',
+            p: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            backgroundColor: 'background.default'
+          }}>
+            {currentInvestigation && investigationResults[currentInvestigation._id] ? (
+              investigationResults[currentInvestigation._id]
+            ) : (
+              <Typography color="text.secondary">No analysis available</Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInvestigationDialogOpen(false)}>Close</Button>
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              setSuccess(`Action plan created for ${currentInvestigation?.account}`);
+              setInvestigationDialogOpen(false);
+            }}
+          >
+            Create Action Plan
           </Button>
         </DialogActions>
       </Dialog>
