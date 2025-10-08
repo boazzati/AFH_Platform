@@ -263,23 +263,35 @@ const Benchmarking = () => {
 
   const handleShare = async () => {
     try {
-      // Simulate sharing functionality
-      if (navigator.share) {
-        await navigator.share({
-          title: 'AFH Benchmarking Report',
-          text: 'Check out our latest performance benchmarking data',
-          url: window.location.href,
-        });
-        setSuccess('Report shared successfully!');
-      } else {
-        // Fallback: copy to clipboard
-        const reportText = `AFH Benchmarking Report\n\nPerformance Metrics:\n${performanceData.map(p => `${p.metric}: ${p.yourPerformance} (Benchmark: ${p.benchmark})`).join('\n')}`;
-        await navigator.clipboard.writeText(reportText);
-        setSuccess('Report data copied to clipboard!');
-      }
+      // Create a comprehensive report
+      const reportData = {
+        title: 'AFH Performance Benchmarking Report',
+        timeframe: timeframe,
+        channel: channel,
+        performanceData: performanceData,
+        channelPerformance: channelPerformance,
+        generatedAt: new Date().toISOString()
+      };
+
+      // Convert to downloadable JSON
+      const reportJson = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([reportJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `benchmarking-report-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setSuccess('Benchmarking report downloaded! You can now share the file.');
+      
     } catch (error) {
       console.error('Share error:', error);
-      setError('Failed to share report');
+      setError('Failed to generate report');
     }
   };
 
