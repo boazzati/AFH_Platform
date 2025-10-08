@@ -67,6 +67,13 @@ export const crawlingAPI = {
   crawlMenuData: (data) => api.post('/api/crawl/menu-data', data),
 };
 
+// ADD THE MISSING DASHBOARD API
+export const dashboardApi = {
+  getOverview: () => api.get('/api/dashboard/overview'),
+  getMetrics: () => api.get('/api/dashboard/metrics'),
+  getRecentActivity: () => api.get('/api/dashboard/recent-activity'),
+};
+
 // ALIASES (uppercase - for component compatibility)
 export const benchmarkingAPI = benchmarkingApi;
 export const dataIntegrationAPI = dataIntegrationApi;
@@ -74,6 +81,7 @@ export const executionEngineAPI = executionEngineApi;
 export const expertNetworkAPI = expertNetworkApi;
 export const marketMappingAPI = marketMappingApi;
 export const playbookGeneratorAPI = playbookGeneratorApi;
+export const dashboardAPI = dashboardApi; // Add this alias
 
 // Note: agenticAIApi is already exported above and doesn't need an alias
 // Note: crawlingAPI is already uppercase
