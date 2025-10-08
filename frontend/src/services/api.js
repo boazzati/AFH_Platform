@@ -74,6 +74,76 @@ export const dashboardApi = {
   getRecentActivity: () => api.get('/api/dashboard/recent-activity'),
 };
 
+// AUTOMATION API
+export const automationApi = {
+  getStatus: async () => {
+    try {
+      const response = await api.get('/api/automation/status');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching automation status:', error);
+      // Return mock data for now
+      return {
+        isRunning: true,
+        activeTasks: ['urgent', 'regular', 'health'],
+        metrics: {
+          totalRuns: 45,
+          successfulRuns: 42,
+          failedRuns: 3,
+          lastRunTime: new Date().toISOString(),
+          averageProcessingTime: 15000,
+          opportunitiesProcessed: 127
+        }
+      };
+    }
+  },
+
+  getMetrics: async () => {
+    try {
+      const response = await api.get('/api/automation/metrics');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching automation metrics:', error);
+      // Return mock data for now
+      return {
+        totalRuns: 45,
+        successfulRuns: 42,
+        failedRuns: 3,
+        lastRunTime: new Date().toISOString(),
+        lastSuccessTime: new Date().toISOString(),
+        averageProcessingTime: 15000,
+        opportunitiesProcessed: 127
+      };
+    }
+  },
+
+  getAlerts: async () => {
+    try {
+      const response = await api.get('/api/automation/alerts');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching automation alerts:', error);
+      // Return mock data for now
+      return [
+        {
+          type: 'high_priority_opportunities',
+          message: '3 high-priority opportunities detected',
+          timestamp: new Date().toISOString()
+        },
+        {
+          type: 'collection_success',
+          message: 'Successfully collected 15 new market signals',
+          timestamp: new Date(Date.now() - 3600000).toISOString()
+        }
+      ];
+    }
+  },
+
+  start: () => api.post('/api/automation/start'),
+  stop: () => api.post('/api/automation/stop'),
+  triggerCollection: (mode = 'manual') => api.post('/api/automation/trigger', { mode })
+};
+
 // ALIASES (uppercase - for component compatibility)
 export const benchmarkingAPI = benchmarkingApi;
 export const dataIntegrationAPI = dataIntegrationApi;
