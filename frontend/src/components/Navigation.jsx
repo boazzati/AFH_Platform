@@ -17,7 +17,7 @@ import {
   Groups,
   SmartToy,
   Analytics,
-  PredictiveText
+  TrendingUp
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -31,7 +31,7 @@ const menuItems = [
   { text: 'Data Integration', icon: <IntegrationInstructions />, path: '/data-integration' },
   { text: 'Expert Network', icon: <Groups />, path: '/expert-network' },
   { text: 'Agentic AI', icon: <SmartToy />, path: '/agentic-ai' },
-  { text: 'Predictive Analytics', icon: <PredictiveText />, path: '/predictive-analytics' },
+  { text: 'Predictive Analytics', icon: <TrendingUp />, path: '/predictive-analytics' },
   { text: 'Benchmarking', icon: <Analytics />, path: '/benchmarking' },
 ];
 
