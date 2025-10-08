@@ -41,7 +41,7 @@ import {
   Edit,
   Delete
 } from '@mui/icons-material';
-import { executionEngineApi } from '../services/api';
+import { executionEngineAPI } from '../services/api';
 
 const ExecutionEngine = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -68,7 +68,7 @@ const ExecutionEngine = () => {
   const loadActivities = async () => {
     setLoading(true);
     try {
-      const response = await executionEngineApi.getProjects();
+      const response = await executionEngineAPI.getProjects();
       // Transform projects to activities format
       const transformedActivities = response.data.map(project => ({
         id: project._id,
@@ -185,8 +185,20 @@ const ExecutionEngine = () => {
         }
       };
 
-      const response = await executionEngineApi.createProject(projectData);
+      const response = await executionEngineAPI.createProject(projectData);
       
+      // Update activities list immediately
+      const newActivityItem = {
+        id: response.data._id,
+        account: newActivity.account,
+        type: newActivity.type,
+        status: newActivity.status,
+        date: newActivity.date,
+        notes: newActivity.notes,
+        nextAction: newActivity.nextAction
+      };
+      
+      setActivities(prev => [newActivityItem, ...prev]);
       setSuccess('Activity logged successfully!');
       setOpenDialog(false);
       setNewActivity({
@@ -198,8 +210,6 @@ const ExecutionEngine = () => {
         nextAction: ''
       });
       
-      // Reload activities
-      await loadActivities();
     } catch (error) {
       console.error('Error adding activity:', error);
       setError('Failed to log activity');
@@ -235,7 +245,14 @@ const ExecutionEngine = () => {
         nextSteps: [newActivity.nextAction]
       };
 
-      await executionEngineApi.updateProject(editingActivity.id, projectData);
+      await executionEngineAPI.updateProject(editingActivity.id, projectData);
+      
+      // Update the activity in the local state
+      setActivities(prev => prev.map(activity => 
+        activity.id === editingActivity.id 
+          ? { ...activity, ...newActivity }
+          : activity
+      ));
       
       setSuccess('Activity updated successfully!');
       setOpenDialog(false);
@@ -249,7 +266,6 @@ const ExecutionEngine = () => {
         nextAction: ''
       });
       
-      await loadActivities();
     } catch (error) {
       console.error('Error updating activity:', error);
       setError('Failed to update activity');
@@ -260,28 +276,56 @@ const ExecutionEngine = () => {
 
   const handleApplyRecommendation = async (recommendation) => {
     try {
-      // Create a new activity based on the recommendation
+      // Create a new project based on the recommendation
       const projectData = {
-        name: 'AI Recommended Action',
+        name: `AI Action: ${recommendation.substring(0, 30)}...`,
         status: 'planned',
         progress: 0,
-        channel: 'General',
+        channel: 'AI Recommended',
         owner: 'AI System',
-        timeline: new Date().toISOString().split('T')[0],
+        timeline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
         risks: [recommendation],
-        nextSteps: ['Review and execute AI recommendation'],
+        nextSteps: [
+          'Review AI recommendation',
+          'Assign team resources',
+          'Set KPIs and timeline',
+          'Execute action plan'
+        ],
         performanceMetrics: {
           source: 'AI Recommendation',
-          priority: 'High'
+          priority: 'High',
+          expectedImpact: 'Significant'
         }
       };
 
-      await executionEngineApi.createProject(projectData);
-      setSuccess('AI recommendation applied successfully!');
-      await loadActivities();
+      const response = await executionEngineAPI.createProject(projectData);
+      
+      // Add to activities immediately
+      const newActivityItem = {
+        id: response.data._id,
+        account: projectData.name,
+        type: 'AI Action',
+        status: 'planned',
+        date: new Date().toISOString().split('T')[0],
+        notes: recommendation,
+        nextAction: 'Review and assign'
+      };
+      
+      setActivities(prev => [newActivityItem, ...prev]);
+      setSuccess(`AI recommendation applied! Project "${projectData.name}" created.`);
+      
     } catch (error) {
       console.error('Error applying recommendation:', error);
       setError('Failed to apply recommendation');
+    }
+  };
+
+  const handleCompleteStep = (stepIndex) => {
+    if (stepIndex < executionSteps.length - 1) {
+      setActiveStep(stepIndex + 1);
+    } else {
+      setSuccess('All execution steps completed! Ready to launch new initiatives.');
+      setActiveStep(0); // Reset to first step
     }
   };
 
@@ -299,7 +343,8 @@ const ExecutionEngine = () => {
       'Pitch': 25,
       'Pilot': 50,
       'Launch': 100,
-      'Follow-up': 75
+      'Follow-up': 75,
+      'AI Action': 10
     };
     return progressMap[type] || 0;
   };
@@ -390,11 +435,10 @@ const ExecutionEngine = () => {
                       <Box sx={{ mb: 2, mt: 1 }}>
                         <Button
                           variant="contained"
-                          onClick={() => setActiveStep(index + 1)}
+                          onClick={() => handleCompleteStep(index)}
                           sx={{ mt: 1, mr: 1 }}
-                          disabled={index === executionSteps.length - 1}
                         >
-                          {index === executionSteps.length - 1 ? 'Finish' : 'Continue'}
+                          {index === executionSteps.length - 1 ? 'Complete Process' : 'Mark Complete'}
                         </Button>
                         {index > 0 && (
                           <Button
@@ -417,20 +461,27 @@ const ExecutionEngine = () => {
               <Typography variant="h6" gutterBottom>
                 AI Recommendations & Gap Analysis
               </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Apply AI insights to create actionable projects
+              </Typography>
               <List>
                 {[
-                  'Increase follow-up frequency for Burger King account',
-                  'Consider competitive pricing analysis for Google Campus',
-                  'Expand premium portfolio offering for Hilton Hotels',
-                  'Monitor Q1 menu changes in target QSR accounts'
+                  'Increase follow-up frequency for Burger King account - Current win rate below target',
+                  'Consider competitive pricing analysis for Google Campus - Opportunity for premium placement',
+                  'Expand premium portfolio offering for Hilton Hotels - High-margin opportunity identified',
+                  'Monitor Q1 menu changes in target QSR accounts - Seasonal menu updates create openings'
                 ].map((recommendation, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
                       <TrackChanges color="primary" />
                     </ListItemIcon>
-                    <ListItemText primary={recommendation} />
+                    <ListItemText 
+                      primary={recommendation.split(' - ')[0]}
+                      secondary={recommendation.split(' - ')[1]}
+                    />
                     <Button 
                       size="small" 
+                      variant="outlined"
                       onClick={() => handleApplyRecommendation(recommendation)}
                       disabled={loading}
                     >
@@ -446,9 +497,18 @@ const ExecutionEngine = () => {
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Activities
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  Recent Activities
+                </Typography>
+                <Button 
+                  size="small" 
+                  onClick={loadActivities}
+                  disabled={loading}
+                >
+                  Refresh
+                </Button>
+              </Box>
               {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                   <CircularProgress />
@@ -500,10 +560,10 @@ const ExecutionEngine = () => {
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {[
-                  { metric: 'Pitch-to-Pilot Rate', value: '42%', trend: '+8%' },
-                  { metric: 'Pilot Success Rate', value: '68%', trend: '+12%' },
-                  { metric: 'Average Time to Launch', value: '45 days', trend: '-5 days' },
-                  { metric: 'Account Retention', value: '92%', trend: '+4%' }
+                  { metric: 'Active Projects', value: activities.length, trend: activities.length > 0 ? '+2' : '0' },
+                  { metric: 'Completion Rate', value: `${Math.round((activities.filter(a => a.status === 'completed').length / activities.length) * 100) || 0}%`, trend: '+8%' },
+                  { metric: 'Avg Time to Complete', value: '45 days', trend: '-5 days' },
+                  { metric: 'AI Recommendations Applied', value: activities.filter(a => a.type === 'AI Action').length, trend: '+3' }
                 ].map((item, index) => (
                   <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="body2">{item.metric}</Typography>
@@ -511,7 +571,11 @@ const ExecutionEngine = () => {
                       <Typography variant="body1" fontWeight="bold">
                         {item.value}
                       </Typography>
-                      <Chip label={item.trend} color="success" size="small" />
+                      <Chip 
+                        label={item.trend} 
+                        color={item.trend.startsWith('+') || item.trend.startsWith('-') ? "success" : "default"} 
+                        size="small" 
+                      />
                     </Box>
                   </Box>
                 ))}
@@ -545,6 +609,7 @@ const ExecutionEngine = () => {
                 <MenuItem value="Pilot">Pilot</MenuItem>
                 <MenuItem value="Launch">Launch</MenuItem>
                 <MenuItem value="Follow-up">Follow-up</MenuItem>
+                <MenuItem value="AI Action">AI Action</MenuItem>
               </Select>
             </FormControl>
             <FormControl fullWidth>
@@ -574,12 +639,14 @@ const ExecutionEngine = () => {
               value={newActivity.notes}
               onChange={(e) => setNewActivity({ ...newActivity, notes: e.target.value })}
               fullWidth
+              placeholder="Describe the activity, key discussions, outcomes..."
             />
             <TextField
               label="Next Action"
               value={newActivity.nextAction}
               onChange={(e) => setNewActivity({ ...newActivity, nextAction: e.target.value })}
               fullWidth
+              placeholder="What needs to happen next?"
             />
           </Box>
         </DialogContent>
