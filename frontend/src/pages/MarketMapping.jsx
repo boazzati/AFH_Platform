@@ -25,21 +25,15 @@ import {
   Select,
   MenuItem,
   Checkbox,
-  FormControlLabel,
   IconButton,
   Tooltip,
-  Menu,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Slider,
-  Switch,
   Badge,
   TableSortLabel,
-  Pagination
+  Pagination,
+  LinearProgress
 } from '@mui/material';
 import {
   Search,
@@ -50,23 +44,14 @@ import {
   Business,
   Add,
   FilterList,
-  Sort,
-  ViewColumn,
   Download,
   Refresh,
   MoreVert,
-  Edit,
-  Delete,
-  Visibility,
-  ExpandMore,
   Clear,
   School,
   LocalHospital,
   Hotel,
-  Work,
-  Map as MapIcon,
-  Analytics,
-  Timeline
+  Work
 } from '@mui/icons-material';
 import { marketMappingApi } from '../services/api';
 
@@ -83,11 +68,8 @@ const MarketMapping = () => {
   const [rowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [viewMode, setViewMode] = useState('table'); // table, cards, map
   const [confidenceRange, setConfidenceRange] = useState([0, 100]);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const [newAccount, setNewAccount] = useState({
     account: '',
@@ -141,7 +123,8 @@ const MarketMapping = () => {
       setMarketData(response.data || []);
     } catch (error) {
       console.error('Error loading market data:', error);
-      // Keep existing data if API fails
+      // Fallback to empty array if API fails
+      setMarketData([]);
     } finally {
       setLoading(false);
     }
@@ -149,9 +132,9 @@ const MarketMapping = () => {
 
   const applyFilters = () => {
     let filtered = marketData.filter(item => {
-      const matchesSearch = item.account?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.signal?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (item.account || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (item.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (item.signal || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesChannel = selectedChannels.length === 0 || selectedChannels.includes(item.channel);
       const matchesPriority = selectedPriorities.length === 0 || selectedPriorities.includes(item.priority);
@@ -218,16 +201,11 @@ const MarketMapping = () => {
     }
   };
 
-  const handleBulkAction = (action) => {
-    console.log(`Bulk ${action} for:`, selectedRows);
-    setAnchorEl(null);
-  };
-
   const handleExport = () => {
     const csvContent = [
       ['Account', 'Channel', 'Location', 'Signal', 'Priority', 'Confidence', 'Opportunity'],
       ...filteredData.map(row => [
-        row.account, row.channel, row.location, row.signal, row.priority, row.confidence, row.opportunity
+        row.account || '', row.channel || '', row.location || '', row.signal || '', row.priority || '', row.confidence || '', row.opportunity || ''
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -484,7 +462,7 @@ const MarketMapping = () => {
                           checked={paginatedData.length > 0 && selectedRows.length === paginatedData.length}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedRows(paginatedData.map(row => row._id));
+                              setSelectedRows(paginatedData.map(row => row._id || row.id));
                             } else {
                               setSelectedRows([]);
                             }
@@ -509,31 +487,32 @@ const MarketMapping = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedData.map((row) => (
+                    {paginatedData.map((row, index) => (
                       <TableRow 
-                        key={row._id} 
+                        key={row._id || row.id || index} 
                         hover
-                        selected={selectedRows.includes(row._id)}
+                        selected={selectedRows.includes(row._id || row.id)}
                       >
                         <TableCell padding="checkbox">
                           <Checkbox
-                            checked={selectedRows.includes(row._id)}
+                            checked={selectedRows.includes(row._id || row.id)}
                             onChange={(e) => {
+                              const rowId = row._id || row.id;
                               if (e.target.checked) {
-                                setSelectedRows(prev => [...prev, row._id]);
+                                setSelectedRows(prev => [...prev, rowId]);
                               } else {
-                                setSelectedRows(prev => prev.filter(id => id !== row._id));
+                                setSelectedRows(prev => prev.filter(id => id !== rowId));
                               }
                             }}
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography fontWeight="bold">{row.account || row.type}</Typography>
+                          <Typography fontWeight="bold">{row.account || row.type || 'N/A'}</Typography>
                         </TableCell>
                         <TableCell>
                           <Chip 
                             icon={getChannelIcon(row.channel)} 
-                            label={row.channel} 
+                            label={row.channel || 'N/A'} 
                             size="small"
                             sx={{ 
                               backgroundColor: getChannelColor(row.channel) + '20',
@@ -541,15 +520,15 @@ const MarketMapping = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>{row.location}</TableCell>
+                        <TableCell>{row.location || 'N/A'}</TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {row.signal || row.description}
+                            {row.signal || row.description || 'N/A'}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip 
-                            label={priorityLevels[row.priority]?.label || row.priority} 
+                            label={priorityLevels[row.priority]?.label || row.priority || 'Medium'} 
                             color={priorityLevels[row.priority]?.color || 'default'}
                             size="small"
                           />
@@ -568,7 +547,7 @@ const MarketMapping = () => {
                             </Box>
                           </Box>
                         </TableCell>
-                        <TableCell>{row.opportunity || row.potentialValue}</TableCell>
+                        <TableCell>{row.opportunity || row.potentialValue || 'N/A'}</TableCell>
                         <TableCell>
                           <IconButton size="small">
                             <MoreVert />
@@ -576,22 +555,33 @@ const MarketMapping = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {paginatedData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={9} sx={{ textAlign: 'center', py: 4 }}>
+                          <Typography color="text.secondary">
+                            {loading ? 'Loading market signals...' : 'No market signals found'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
 
               {/* Pagination */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Showing {((page - 1) * rowsPerPage) + 1}-{Math.min(page * rowsPerPage, filteredData.length)} of {filteredData.length} results
-                </Typography>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={(e, newPage) => setPage(newPage)}
-                  color="primary"
-                />
-              </Box>
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Showing {((page - 1) * rowsPerPage) + 1}-{Math.min(page * rowsPerPage, filteredData.length)} of {filteredData.length} results
+                  </Typography>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(e, newPage) => setPage(newPage)}
+                    color="primary"
+                  />
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>
