@@ -75,7 +75,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { api } from '../services/api';
+import api, { predictiveAnalyticsApi } from '../services/api';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -119,9 +119,9 @@ const PredictiveAnalytics = () => {
 
       // Load all analytics data
       const [scoring, trends, opportunities] = await Promise.all([
-        api.get('/analytics/scoring-statistics'),
-        api.get('/analytics/trend-forecast'),
-        api.get('/market-signals')
+        predictiveAnalyticsApi.getScoringStatistics(),
+        predictiveAnalyticsApi.getTrendForecast(),
+        api.get('/api/market-signals')
       ]);
 
       setScoringData(scoring.data);
@@ -139,7 +139,7 @@ const PredictiveAnalytics = () => {
   const runPredictiveAnalysis = async (opportunityId) => {
     try {
       setAnalyzing(true);
-      const response = await api.post(`/analytics/comprehensive-analysis/${opportunityId}`);
+      const response = await predictiveAnalyticsApi.runComprehensiveAnalysis(opportunityId);
       setAnalysisResults(response.data);
       setSelectedOpportunity(opportunities.find(o => o._id === opportunityId));
     } catch (error) {
