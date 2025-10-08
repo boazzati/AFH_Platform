@@ -53,7 +53,7 @@ import {
   Speed,
   Timeline,
   AutoMode,
-  ManualMode,
+  TouchApp,
   Insights,
   Analytics
 } from '@mui/icons-material';
@@ -283,7 +283,7 @@ const Dashboard = () => {
             }
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {automationEnabled ? <AutoMode /> : <ManualMode />}
+                {automationEnabled ? <AutoMode /> : <TouchApp />}
                 Automation
               </Box>
             }
