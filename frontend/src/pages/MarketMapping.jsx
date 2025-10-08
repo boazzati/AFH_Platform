@@ -19,14 +19,37 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  CircularProgress,
+  IconButton
 } from '@mui/material';
-import { Search, TrendingUp, Warning, Restaurant, LocalCafe, Business, Add } from '@mui/icons-material';
-import { marketMappingApi } from '../services/api';
+import { 
+  Search, 
+  TrendingUp, 
+  Warning, 
+  Restaurant, 
+  LocalCafe, 
+  Business, 
+  Add, 
+  School,
+  LocalHospital,
+  Refresh,
+  Analytics
+} from '@mui/icons-material';
+import { marketMappingAPI, marketMappingApi } from '../services/api';
+
 const MarketMapping = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [marketData, setMarketData] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [newAccount, setNewAccount] = useState({
     account: '',
@@ -46,40 +69,145 @@ const MarketMapping = () => {
   }, []);
 
   const loadMarketData = async () => {
+    setLoading(true);
     try {
-      const response = await marketMappingAPI.getAll();
-      setMarketData(response.data);
+      const response = await marketMappingAPI.getMarketSignals();
+      // Transform market signals to market mapping format
+      const transformedData = transformMarketSignals(response.data);
+      setMarketData(transformedData);
     } catch (error) {
       console.error('Error loading market data:', error);
+      setError('Failed to load market data. Using sample data.');
       // Fallback to sample data if API fails
-      setMarketData([
-        { 
-          _id: '1',
-          account: 'Burger King - Downtown', 
-          channel: 'QSR', 
-          location: 'New York, NY',
-          signal: 'New menu expansion', 
-          priority: 'high',
-          opportunity: 'Beverage partnership',
-          trend: 'up' 
-        },
-        { 
-          _id: '2',
-          account: 'Google Campus Cafe', 
-          channel: 'Workplace', 
-          location: 'Mountain View, CA',
-          signal: 'Contract renewal Q2', 
-          priority: 'high',
-          opportunity: 'Healthy beverage line',
-          trend: 'up' 
-        }
-      ]);
+      setMarketData(getSampleMarketData());
+    } finally {
+      setLoading(false);
     }
   };
 
+  const transformMarketSignals = (signals) => {
+    return signals.map(signal => ({
+      _id: signal._id,
+      account: signal.location || 'Unknown Account',
+      channel: getChannelFromSignal(signal),
+      location: signal.location || 'Unknown Location',
+      signal: signal.description || 'No signal description',
+      priority: mapSeverityToPriority(signal.severity),
+      opportunity: signal.potentialValue || 'Unknown opportunity',
+      trend: getTrendFromConfidence(signal.confidence),
+      confidence: signal.confidence,
+      timestamp: signal.timestamp,
+      source: signal.source
+    }));
+  };
+
+  const getChannelFromSignal = (signal) => {
+    if (signal.category) {
+      const category = signal.category.toLowerCase();
+      if (category.includes('qsr') || category.includes('restaurant')) return 'QSR';
+      if (category.includes('workplace') || category.includes('corporate')) return 'Workplace';
+      if (category.includes('leisure') || category.includes('hotel')) return 'Leisure';
+      if (category.includes('education') || category.includes('campus')) return 'Education';
+      if (category.includes('healthcare') || category.includes('hospital')) return 'Healthcare';
+    }
+    return channels[Math.floor(Math.random() * channels.length)];
+  };
+
+  const mapSeverityToPriority = (severity) => {
+    const priorityMap = {
+      'high': 'high',
+      'medium': 'medium',
+      'low': 'low'
+    };
+    return priorityMap[severity] || 'medium';
+  };
+
+  const getTrendFromConfidence = (confidence) => {
+    return confidence > 70 ? 'up' : confidence > 40 ? 'stable' : 'down';
+  };
+
+  const getSampleMarketData = () => [
+    { 
+      _id: '1',
+      account: 'Burger King - Downtown', 
+      channel: 'QSR', 
+      location: 'New York, NY',
+      signal: 'New menu expansion', 
+      priority: 'high',
+      opportunity: 'Beverage partnership',
+      trend: 'up',
+      confidence: 85
+    },
+    { 
+      _id: '2',
+      account: 'Google Campus Cafe', 
+      channel: 'Workplace', 
+      location: 'Mountain View, CA',
+      signal: 'Contract renewal Q2', 
+      priority: 'high',
+      opportunity: 'Healthy beverage line',
+      trend: 'up',
+      confidence: 78
+    },
+    { 
+      _id: '3',
+      account: 'Hilton Hotels', 
+      channel: 'Leisure', 
+      location: 'Chicago, IL',
+      signal: 'Mini-bar refresh program', 
+      priority: 'medium',
+      opportunity: 'Premium portfolio placement',
+      trend: 'up',
+      confidence: 65
+    },
+    { 
+      _id: '4',
+      account: 'State University', 
+      channel: 'Education', 
+      location: 'Boston, MA',
+      signal: 'New dining hall construction', 
+      priority: 'medium',
+      opportunity: 'Volume contract',
+      trend: 'stable',
+      confidence: 55
+    },
+    { 
+      _id: '5',
+      account: 'General Hospital', 
+      channel: 'Healthcare', 
+      location: 'Houston, TX',
+      signal: 'Cafeteria renovation', 
+      priority: 'low',
+      opportunity: 'Wellness beverage program',
+      trend: 'down',
+      confidence: 35
+    }
+  ];
+
   const handleAddAccount = async () => {
+    if (!newAccount.account || !newAccount.channel || !newAccount.signal) {
+      setError('Please fill in account, channel, and market signal');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await marketMappingAPI.create(newAccount);
+      // Create a market signal from the new account data
+      const signalData = {
+        type: 'market-opportunity',
+        severity: newAccount.priority,
+        location: `${newAccount.account} - ${newAccount.location}`,
+        description: newAccount.signal,
+        potentialValue: newAccount.opportunity,
+        confidence: getConfidenceFromPriority(newAccount.priority),
+        source: 'manual-entry',
+        category: newAccount.channel
+      };
+
+      await marketMappingAPI.createMarketSignal(signalData);
+      
+      setSuccess(`Account "${newAccount.account}" added successfully!`);
+      setOpenDialog(false);
       setNewAccount({
         account: '',
         channel: '',
@@ -88,15 +216,65 @@ const MarketMapping = () => {
         priority: 'medium',
         opportunity: ''
       });
-      setOpenDialog(false);
-      loadMarketData(); // Reload data
+      
+      // Reload market data
+      await loadMarketData();
     } catch (error) {
       console.error('Error adding account:', error);
+      setError('Failed to add account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getConfidenceFromPriority = (priority) => {
+    const confidenceMap = {
+      'high': 80,
+      'medium': 60,
+      'low': 40
+    };
+    return confidenceMap[priority] || 60;
+  };
+
+  const handleAnalyzeTrends = async () => {
+    setLoading(true);
+    try {
+      const response = await marketMappingAPI.analyzeTrends({
+        data: marketData,
+        channel: selectedChannel === 'all' ? 'all channels' : selectedChannel
+      });
+      
+      setSuccess('Market trends analyzed successfully!');
+      console.log('Trend analysis:', response.data);
+      // You could display this in a dialog or update the UI with insights
+    } catch (error) {
+      console.error('Error analyzing trends:', error);
+      setError('Failed to analyze trends');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInvestigate = async (account) => {
+    try {
+      // Simulate investigation process
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSuccess(`Investigation started for ${account.account}. AI analysis in progress.`);
+      // In a real app, this would trigger a deeper analysis or open a detailed view
+    } catch (error) {
+      console.error('Error starting investigation:', error);
+      setError('Failed to start investigation');
+    } finally {
+      setLoading(false);
     }
   };
 
   const filteredData = marketData.filter(item =>
-    item.account.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    item.account.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.signal.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (selectedChannel === 'all' || item.channel === selectedChannel)
   );
 
@@ -105,8 +283,23 @@ const MarketMapping = () => {
       case 'QSR': return <Restaurant />;
       case 'Workplace': return <Business />;
       case 'Leisure': return <LocalCafe />;
+      case 'Education': return <School />;
+      case 'Healthcare': return <LocalHospital />;
       default: return <Business />;
     }
+  };
+
+  const getTrendIcon = (trend) => {
+    switch(trend) {
+      case 'up': return <TrendingUp color="success" />;
+      case 'down': return <Warning color="error" />;
+      default: return <TrendingUp color="disabled" />;
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setError('');
+    setSuccess('');
   };
 
   return (
@@ -119,13 +312,25 @@ const MarketMapping = () => {
         Continuously monitoring restaurant openings, menu partnerships, and channel opportunities
       </Alert>
 
+      {/* Status Alerts */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                 <TextField
-                  placeholder="Search accounts or locations..."
+                  placeholder="Search accounts, locations, or signals..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   sx={{ minWidth: 300 }}
@@ -149,62 +354,165 @@ const MarketMapping = () => {
                     {channel}
                   </Button>
                 ))}
-                <Button 
-                  variant="contained" 
-                  startIcon={<Add />}
-                  onClick={() => setOpenDialog(true)}
-                  sx={{ ml: 'auto' }}
-                >
-                  Add Account
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<Refresh />}
+                    onClick={loadMarketData}
+                    disabled={loading}
+                  >
+                    Refresh
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<Analytics />}
+                    onClick={handleAnalyzeTrends}
+                    disabled={loading || marketData.length === 0}
+                  >
+                    Analyze Trends
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    startIcon={<Add />}
+                    onClick={() => setOpenDialog(true)}
+                    disabled={loading}
+                  >
+                    Add Account
+                  </Button>
+                </Box>
               </Box>
 
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Account</TableCell>
-                      <TableCell>Channel</TableCell>
-                      <TableCell>Location</TableCell>
-                      <TableCell>Market Signal</TableCell>
-                      <TableCell>Priority</TableCell>
-                      <TableCell>Opportunity</TableCell>
-                      <TableCell>Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredData.map((row) => (
-                      <TableRow key={row._id} hover>
-                        <TableCell>
-                          <Typography fontWeight="bold">{row.account}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            icon={getChannelIcon(row.channel)} 
-                            label={row.channel} 
-                            size="small" 
-                          />
-                        </TableCell>
-                        <TableCell>{row.location}</TableCell>
-                        <TableCell>{row.signal}</TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={row.priority} 
-                            color={priorityLevels[row.priority]}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>{row.opportunity}</TableCell>
-                        <TableCell>
-                          <Button size="small" variant="outlined">
-                            Investigate
-                          </Button>
-                        </TableCell>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Account</TableCell>
+                        <TableCell>Channel</TableCell>
+                        <TableCell>Location</TableCell>
+                        <TableCell>Market Signal</TableCell>
+                        <TableCell>Priority</TableCell>
+                        <TableCell>Opportunity</TableCell>
+                        <TableCell>Confidence</TableCell>
+                        <TableCell>Actions</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {filteredData.map((row) => (
+                        <TableRow key={row._id} hover>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {getTrendIcon(row.trend)}
+                              <Typography fontWeight="bold">{row.account}</Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              icon={getChannelIcon(row.channel)} 
+                              label={row.channel} 
+                              size="small" 
+                            />
+                          </TableCell>
+                          <TableCell>{row.location}</TableCell>
+                          <TableCell>{row.signal}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={row.priority} 
+                              color={priorityLevels[row.priority]}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>{row.opportunity}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={`${row.confidence}%`}
+                              size="small"
+                              variant="outlined"
+                              color={row.confidence > 70 ? 'success' : row.confidence > 40 ? 'warning' : 'error'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              size="small" 
+                              variant="outlined"
+                              onClick={() => handleInvestigate(row)}
+                              disabled={loading}
+                            >
+                              Investigate
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {filteredData.length === 0 && !loading && (
+                <Box sx={{ textAlign: 'center', p: 3 }}>
+                  <Typography color="text.secondary">
+                    No market data found. Try adjusting your search or add a new account.
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Market Stats Card */}
+      <Grid container spacing={3} sx={{ mt: 1 }}>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="text.secondary" gutterBottom>
+                Total Opportunities
+              </Typography>
+              <Typography variant="h4">
+                {marketData.length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="text.secondary" gutterBottom>
+                High Priority
+              </Typography>
+              <Typography variant="h4" color="error.main">
+                {marketData.filter(item => item.priority === 'high').length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="text.secondary" gutterBottom>
+                Avg Confidence
+              </Typography>
+              <Typography variant="h4" color="primary.main">
+                {marketData.length > 0 
+                  ? Math.round(marketData.reduce((acc, item) => acc + (item.confidence || 0), 0) / marketData.length)
+                  : 0}%
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="text.secondary" gutterBottom>
+                Active Channels
+              </Typography>
+              <Typography variant="h4">
+                {new Set(marketData.map(item => item.channel)).size}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -220,18 +528,20 @@ const MarketMapping = () => {
               value={newAccount.account}
               onChange={(e) => setNewAccount({...newAccount, account: e.target.value})}
               fullWidth
+              required
             />
-            <TextField
-              select
-              label="Channel"
-              value={newAccount.channel}
-              onChange={(e) => setNewAccount({...newAccount, channel: e.target.value})}
-              fullWidth
-            >
-              {channels.map(channel => (
-                <option key={channel} value={channel}>{channel}</option>
-              ))}
-            </TextField>
+            <FormControl fullWidth required>
+              <InputLabel>Channel</InputLabel>
+              <Select
+                value={newAccount.channel}
+                label="Channel"
+                onChange={(e) => setNewAccount({...newAccount, channel: e.target.value})}
+              >
+                {channels.map(channel => (
+                  <MenuItem key={channel} value={channel}>{channel}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               label="Location"
               value={newAccount.location}
@@ -243,18 +553,22 @@ const MarketMapping = () => {
               value={newAccount.signal}
               onChange={(e) => setNewAccount({...newAccount, signal: e.target.value})}
               fullWidth
+              required
+              multiline
+              rows={2}
             />
-            <TextField
-              select
-              label="Priority"
-              value={newAccount.priority}
-              onChange={(e) => setNewAccount({...newAccount, priority: e.target.value})}
-              fullWidth
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </TextField>
+            <FormControl fullWidth>
+              <InputLabel>Priority</InputLabel>
+              <Select
+                value={newAccount.priority}
+                label="Priority"
+                onChange={(e) => setNewAccount({...newAccount, priority: e.target.value})}
+              >
+                <MenuItem value="low">Low</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="high">High</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Opportunity"
               value={newAccount.opportunity}
@@ -270,12 +584,18 @@ const MarketMapping = () => {
           <Button 
             onClick={handleAddAccount}
             variant="contained"
-            disabled={!newAccount.account || !newAccount.channel}
+            disabled={!newAccount.account || !newAccount.channel || !newAccount.signal || loading}
           >
-            Add Account
+            {loading ? <CircularProgress size={20} /> : 'Add Account'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!error || !!success}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      />
     </Box>
   );
 };
