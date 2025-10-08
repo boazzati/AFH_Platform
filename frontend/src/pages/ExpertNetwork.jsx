@@ -43,9 +43,11 @@ import {
   Verified,
   TrendingUp,
   Add,
-  PersonAdd
+  PersonAdd,
+  Email,
+  Phone
 } from '@mui/icons-material';
-import { expertNetworkApi } from '../services/api';
+import { expertNetworkAPI } from '../services/api';
 
 const ExpertNetwork = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +57,21 @@ const ExpertNetwork = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedExpert, setSelectedExpert] = useState(null);
+  const [contactForm, setContactForm] = useState({
+    subject: '',
+    message: '',
+    urgency: 'medium',
+    contactMethod: 'email'
+  });
+  const [scheduleForm, setScheduleForm] = useState({
+    date: '',
+    time: '',
+    duration: '30',
+    topic: ''
+  });
   const [newExpert, setNewExpert] = useState({
     name: '',
     title: '',
@@ -63,7 +80,9 @@ const ExpertNetwork = () => {
     experience: 0,
     rating: 0,
     hourlyRate: 0,
-    availability: 'Within 72h'
+    availability: 'Within 72h',
+    email: '',
+    phone: ''
   });
 
   // Load experts from backend
@@ -74,7 +93,7 @@ const ExpertNetwork = () => {
   const loadExperts = async () => {
     setLoading(true);
     try {
-      const response = await expertNetworkApi.getExperts();
+      const response = await expertNetworkAPI.getExperts();
       setExperts(response.data);
     } catch (error) {
       console.error('Error loading experts:', error);
@@ -97,7 +116,9 @@ const ExpertNetwork = () => {
       availability: 'Within 24h',
       verified: true,
       experience: 15,
-      previousProjects: ['McDonalds Beverage Program', 'Burger King Menu Refresh']
+      previousProjects: ['McDonalds Beverage Program', 'Burger King Menu Refresh'],
+      email: 'maria.rodriguez@example.com',
+      phone: '+1 (555) 123-4567'
     },
     {
       id: 2,
@@ -110,20 +131,9 @@ const ExpertNetwork = () => {
       availability: 'Within 48h',
       verified: true,
       experience: 12,
-      previousProjects: ['Hilton Mini-bar Strategy', 'Marriott Premium Brands']
-    },
-    {
-      id: 3,
-      name: 'Dr. Sarah Johnson',
-      title: 'Consumer Behavior Researcher',
-      company: 'Kantar, Nielsen Alumni',
-      specialization: ['AFH Trends', 'Consumer Insights', 'Market Research'],
-      rating: 4.8,
-      hourlyRate: 520,
-      availability: 'Within 72h',
-      verified: true,
-      experience: 18,
-      previousProjects: ['Beverage Trend Analysis', 'Consumer Segmentation Study']
+      previousProjects: ['Hilton Mini-bar Strategy', 'Marriott Premium Brands'],
+      email: 'james.chen@example.com',
+      phone: '+1 (555) 234-5678'
     }
   ];
 
@@ -158,10 +168,12 @@ const ExpertNetwork = () => {
         rating: newExpert.rating,
         hourlyRate: newExpert.hourlyRate,
         availability: newExpert.availability,
-        previousProjects: []
+        previousProjects: [],
+        email: newExpert.email,
+        phone: newExpert.phone
       };
 
-      const response = await expertNetworkApi.createExpert(expertData);
+      const response = await expertNetworkAPI.createExpert(expertData);
       
       setSuccess(`Expert "${newExpert.name}" added successfully!`);
       setOpenDialog(false);
@@ -173,10 +185,11 @@ const ExpertNetwork = () => {
         experience: 0,
         rating: 0,
         hourlyRate: 0,
-        availability: 'Within 72h'
+        availability: 'Within 72h',
+        email: '',
+        phone: ''
       });
       
-      // Reload experts
       await loadExperts();
     } catch (error) {
       console.error('Error adding expert:', error);
@@ -186,28 +199,68 @@ const ExpertNetwork = () => {
     }
   };
 
-  const handleConsultExpert = async (expert) => {
+  const handleConsultExpert = (expert) => {
+    setSelectedExpert(expert);
+    setContactForm({
+      subject: `Consultation Request: ${expert.specialization[0]}`,
+      message: `Hello ${expert.name},\n\nI would like to schedule a consultation regarding ${expert.specialization[0]}.\n\nCould you please let me know your availability and rates?\n\nBest regards,\n[Your Name]`,
+      urgency: 'medium',
+      contactMethod: 'email'
+    });
+    setContactDialogOpen(true);
+  };
+
+  const handleScheduleMeeting = (expert) => {
+    setSelectedExpert(expert);
+    setScheduleForm({
+      date: new Date().toISOString().split('T')[0],
+      time: '10:00',
+      duration: '30',
+      topic: `Discussion about ${expert.specialization[0]}`
+    });
+    setScheduleDialogOpen(true);
+  };
+
+  const handleSendConsultation = async () => {
     try {
-      // Simulate consultation request
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setSuccess(`Consultation request sent to ${expert.name}! They will contact you within ${expert.availability.toLowerCase()}.`);
+      // Simulate sending consultation request
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const contactInfo = contactForm.contactMethod === 'email' 
+        ? `Email: ${selectedExpert.email}`
+        : `Phone: ${selectedExpert.phone}`;
+      
+      setSuccess(
+        `Consultation request sent to ${selectedExpert.name}! ` +
+        `They will respond within ${selectedExpert.availability.toLowerCase()}. ` +
+        `Contact: ${contactInfo}`
+      );
+      setContactDialogOpen(false);
+      
     } catch (error) {
-      console.error('Error requesting consultation:', error);
-      setError('Failed to request consultation');
+      console.error('Error sending consultation:', error);
+      setError('Failed to send consultation request');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleScheduleMeeting = async (expert) => {
+  const handleScheduleConsultation = async () => {
     try {
-      // Simulate scheduling
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setSuccess(`Meeting scheduled with ${expert.name}! Check your calendar for confirmation.`);
+      // Simulate scheduling
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setSuccess(
+        `Meeting scheduled with ${selectedExpert.name}! ` +
+        `Date: ${scheduleForm.date} at ${scheduleForm.time} for ${scheduleForm.duration} minutes. ` +
+        `Topic: ${scheduleForm.topic}`
+      );
+      setScheduleDialogOpen(false);
+      
     } catch (error) {
       console.error('Error scheduling meeting:', error);
       setError('Failed to schedule meeting');
@@ -218,14 +271,21 @@ const ExpertNetwork = () => {
 
   const handleQuickConsultation = async (consultationType) => {
     try {
-      // Find relevant expert for the consultation type
       const relevantExpert = experts.find(expert => 
         expert.specialization.some(spec => 
           spec.toLowerCase().includes(consultationType.toLowerCase())
         )
-      ) || experts[0]; // Fallback to first expert
+      ) || experts[0];
 
-      setSuccess(`Quick consultation for "${consultationType}" requested! ${relevantExpert.name} will assist you.`);
+      setContactDialogOpen(true);
+      setSelectedExpert(relevantExpert);
+      setContactForm({
+        subject: `Quick Consultation: ${consultationType}`,
+        message: `Hello ${relevantExpert.name},\n\nI would like a quick consultation about ${consultationType}.\n\nPlease let me know your availability.\n\nBest regards,\n[Your Name]`,
+        urgency: 'medium',
+        contactMethod: 'email'
+      });
+      
     } catch (error) {
       console.error('Error starting quick consultation:', error);
       setError('Failed to start consultation');
@@ -366,8 +426,23 @@ const ExpertNetwork = () => {
                               />
                             </Box>
 
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                              {expert.email && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Email fontSize="small" color="action" />
+                                  <Typography variant="caption">{expert.email}</Typography>
+                                </Box>
+                              )}
+                              {expert.phone && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Phone fontSize="small" color="action" />
+                                  <Typography variant="caption">{expert.phone}</Typography>
+                                </Box>
+                              )}
+                            </Box>
+
                             {expert.previousProjects && expert.previousProjects.length > 0 && (
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                                 Previous: {expert.previousProjects.slice(0, 2).join(', ')}
                                 {expert.previousProjects.length > 2 && `... (+${expert.previousProjects.length - 2} more)`}
                               </Typography>
@@ -583,6 +658,19 @@ const ExpertNetwork = () => {
                 <MenuItem value="Within 72h">Within 72h</MenuItem>
               </Select>
             </FormControl>
+            <TextField
+              label="Email"
+              type="email"
+              value={newExpert.email}
+              onChange={(e) => setNewExpert({ ...newExpert, email: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Phone"
+              value={newExpert.phone}
+              onChange={(e) => setNewExpert({ ...newExpert, phone: e.target.value })}
+              fullWidth
+            />
           </Box>
         </DialogContent>
         <DialogActions>
@@ -593,6 +681,128 @@ const ExpertNetwork = () => {
             disabled={!newExpert.name || !newExpert.title || !newExpert.specialization.length || loading}
           >
             {loading ? <CircularProgress size={20} /> : 'Add Expert'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Contact Dialog */}
+      <Dialog open={contactDialogOpen} onClose={() => setContactDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Contact {selectedExpert?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Consultation Rate: ${selectedExpert?.hourlyRate}/hour • {selectedExpert?.availability}
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel>Contact Method</InputLabel>
+              <Select
+                value={contactForm.contactMethod}
+                label="Contact Method"
+                onChange={(e) => setContactForm({...contactForm, contactMethod: e.target.value})}
+              >
+                <MenuItem value="email">Email: {selectedExpert?.email}</MenuItem>
+                <MenuItem value="phone">Phone: {selectedExpert?.phone}</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Subject"
+              value={contactForm.subject}
+              onChange={(e) => setContactForm({...contactForm, subject: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Message"
+              multiline
+              rows={6}
+              value={contactForm.message}
+              onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Urgency</InputLabel>
+              <Select
+                value={contactForm.urgency}
+                label="Urgency"
+                onChange={(e) => setContactForm({...contactForm, urgency: e.target.value})}
+              >
+                <MenuItem value="low">Low - Within 1 week</MenuItem>
+                <MenuItem value="medium">Medium - Within 3 days</MenuItem>
+                <MenuItem value="high">High - Within 24 hours</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setContactDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSendConsultation}
+            disabled={!contactForm.subject || !contactForm.message || loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Send Request'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Schedule Dialog */}
+      <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Schedule Meeting with {selectedExpert?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Rate: ${selectedExpert?.hourlyRate}/hour • Estimated cost: ${(selectedExpert?.hourlyRate * (parseInt(scheduleForm.duration) / 60)).toFixed(2)}
+            </Typography>
+            <TextField
+              label="Meeting Date"
+              type="date"
+              value={scheduleForm.date}
+              onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="Meeting Time"
+              type="time"
+              value={scheduleForm.time}
+              onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Duration</InputLabel>
+              <Select
+                value={scheduleForm.duration}
+                label="Duration"
+                onChange={(e) => setScheduleForm({...scheduleForm, duration: e.target.value})}
+              >
+                <MenuItem value="30">30 minutes</MenuItem>
+                <MenuItem value="60">60 minutes</MenuItem>
+                <MenuItem value="90">90 minutes</MenuItem>
+                <MenuItem value="120">120 minutes</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Meeting Topic"
+              value={scheduleForm.topic}
+              onChange={(e) => setScheduleForm({...scheduleForm, topic: e.target.value})}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setScheduleDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleScheduleConsultation}
+            disabled={!scheduleForm.date || !scheduleForm.topic || loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Schedule Meeting'}
           </Button>
         </DialogActions>
       </Dialog>
