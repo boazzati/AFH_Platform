@@ -545,6 +545,25 @@ app.post('/api/experts', (req, res) => {
   res.status(201).json({ message: 'Expert created successfully' });
 });
 
+// Root route
+app.get('/', (req, res) => {
+  console.log('🏠 Root route accessed');
+  res.json({
+    message: 'AFH Platform API Server',
+    status: 'running',
+    version: '2.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      ai: '/api/ai/*',
+      analytics: '/api/analytics/*',
+      automation: '/api/automation/*',
+      marketSignals: '/api/market-signals',
+      dashboard: '/api/dashboard/*'
+    }
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err);
