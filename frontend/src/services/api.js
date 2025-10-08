@@ -156,4 +156,14 @@ export const dashboardAPI = dashboardApi; // Add this alias
 // Note: agenticAIApi is already exported above and doesn't need an alias
 // Note: crawlingAPI is already uppercase
 
+// PREDICTIVE ANALYTICS API
+export const predictiveAnalyticsApi = {
+  getScoringStatistics: () => api.get('/api/analytics/scoring-statistics'),
+  getTrendForecast: () => api.get('/api/analytics/trend-forecast'),
+  runComprehensiveAnalysis: (opportunityId) => api.post(`/api/analytics/comprehensive-analysis/${opportunityId}`),
+  scoreOpportunity: (opportunityId) => api.post(`/api/analytics/score-opportunity/${opportunityId}`),
+  getRiskAssessment: (opportunityId) => api.post(`/api/analytics/risk-assessment/${opportunityId}`),
+  getRevenuePrediction: (opportunityId) => api.post(`/api/analytics/revenue-prediction/${opportunityId}`)
+};
+
 export default api;

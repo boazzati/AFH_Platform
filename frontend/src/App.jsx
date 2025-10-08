@@ -14,6 +14,7 @@ import DataIntegration from './pages/DataIntegration';
 import ExpertNetwork from './pages/ExpertNetwork';
 import AgenticAI from './pages/AgenticAI';
 import Benchmarking from './pages/Benchmarking';
+import PredictiveAnalytics from './pages/PredictiveAnalytics';
 
 // Navigation and onboarding components
 import Navigation from './components/Navigation';
@@ -106,6 +107,7 @@ function AppContent() {
           <Route path="/expert-network" element={<ExpertNetwork />} />
           <Route path="/agentic-ai" element={<AgenticAI />} />
           <Route path="/benchmarking" element={<Benchmarking />} />
+          <Route path="/predictive-analytics" element={<PredictiveAnalytics />} />
         </Routes>
       </Box>
       
