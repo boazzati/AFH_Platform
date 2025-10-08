@@ -444,7 +444,22 @@ app.post('/api/playbooks', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
+app.put('/api/playbooks/:id', async (req, res) => {
+  try {
+    const playbook = await Playbook.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, lastUpdated: new Date() },
+      { new: true }
+    );
+    if (!playbook) {
+      return res.status(404).json({ error: 'Playbook not found' });
+    }
+    res.json(playbook);
+  } catch (error) {
+    console.error('Playbook update error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
 // Projects Routes
 app.get('/api/projects', async (req, res) => {
   try {
@@ -469,7 +484,23 @@ app.post('/api/projects', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
+// Add this after your existing projects routes
+app.put('/api/projects/:id', async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, lastUpdate: new Date() },
+      { new: true }
+    );
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    res.json(project);
+  } catch (error) {
+    console.error('Project update error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
 // Experts Routes
 app.get('/api/experts', async (req, res) => {
   try {
@@ -480,7 +511,21 @@ app.get('/api/experts', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+app.post('/api/experts', async (req, res) => {
+  try {
+    const expert = new Expert({
+      ...req.body,
+      rating: req.body.rating || 0,
+      experience: req.body.experience || 0,
+      previousProjects: req.body.previousProjects || []
+    });
+    await expert.save();
+    res.status(201).json(expert);
+  } catch (error) {
+    console.error('Expert creation error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
 // Partnership Analysis Route
 app.post('/api/analyze-partnership', async (req, res) => {
   try {
