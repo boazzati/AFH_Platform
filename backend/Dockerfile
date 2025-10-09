@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install system dependencies required for Puppeteer
 RUN apk add --no-cache \
