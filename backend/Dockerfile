@@ -21,7 +21,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies with optimizations
-RUN npm ci --only=production --silent
+RUN npm install --production --silent
 
 # Copy application code
 COPY . .
