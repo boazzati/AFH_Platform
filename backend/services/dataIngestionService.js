@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 const { OpenAI } = require('openai');
 
 class DataIngestionService {
@@ -9,6 +10,22 @@ class DataIngestionService {
     });
     this.crawl4aiUrl = process.env.CRAWL4AI_API_URL;
     this.crawl4aiKey = process.env.CRAWL4AI_API_KEY;
+    
+    // Puppeteer configuration for Docker/Railway
+    this.puppeteerConfig = {
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    };
     
     // Data sources for AFH market intelligence
     this.dataSources = {
@@ -40,6 +57,18 @@ class DataIngestionService {
   }
 
   /**
+   * Get properly configured Puppeteer browser instance
+   */
+  async getBrowser() {
+    try {
+      return await puppeteer.launch(this.puppeteerConfig);
+    } catch (error) {
+      console.error('Failed to launch Puppeteer:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Main data ingestion orchestrator
    */
   async ingestMarketData() {
@@ -50,63 +79,53 @@ class DataIngestionService {
         restaurantNews: await this.scrapeRestaurantNews(),
         industryReports: await this.scrapeIndustryReports(),
         chainUpdates: await this.scrapeChainWebsites(),
-        socialMedia: await this.scrapeSocialMedia(),
-        timestamp: new Date().toISOString()
+        socialMedia: await this.scrapeSocialMedia()
       };
 
       // Process and classify the collected data
       const processedData = await this.processAndClassifyData(results);
       
-      console.log(`✅ Data ingestion completed. Processed ${processedData.length} opportunities`);
+      console.log('✅ Data ingestion completed successfully');
       return processedData;
-      
     } catch (error) {
-      console.error('❌ Error in data ingestion:', error);
+      console.error('❌ Data ingestion failed:', error);
       throw error;
     }
   }
 
   /**
-   * Scrape restaurant industry news for opportunities
+   * Scrape restaurant industry news
    */
   async scrapeRestaurantNews() {
-    console.log('📰 Scraping restaurant industry news...');
-    const newsData = [];
+    console.log('📰 Scraping restaurant news...');
+    const allNews = [];
 
-    for (const source of this.dataSources.restaurantNews) {
+    for (const url of this.dataSources.restaurantNews) {
       try {
-        const articles = await this.scrapeWebsite(source, {
+        const articles = await this.scrapeWebsite(url, {
           extractionRules: {
             articles: {
-              selector: 'article, .article, .news-item',
+              selector: 'article, .article-item, .news-item',
               fields: {
                 title: 'h1, h2, h3, .title',
-                content: '.content, .article-body, p',
-                date: '.date, .published, time',
-                url: 'a@href'
+                content: '.content, .excerpt, p',
+                date: '.date, time, .published',
+                link: 'a@href'
               }
             }
           }
         });
-
-        // Filter articles for AFH opportunities
-        const relevantArticles = articles.filter(article => 
-          this.containsOpportunityKeywords(article.title + ' ' + article.content)
-        );
-
-        newsData.push(...relevantArticles.map(article => ({
-          ...article,
-          source: source,
-          type: 'news',
-          category: this.categorizeContent(article.title + ' ' + article.content)
-        })));
-
+        
+        allNews.push(...articles);
+        
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
-        console.error(`Error scraping ${source}:`, error.message);
+        console.error(`Error scraping ${url}:`, error.message);
       }
     }
 
-    return newsData;
+    return allNews;
   }
 
   /**
@@ -114,88 +133,79 @@ class DataIngestionService {
    */
   async scrapeIndustryReports() {
     console.log('📊 Scraping industry reports...');
-    const reportData = [];
+    const allReports = [];
 
-    for (const source of this.dataSources.industryReports) {
+    for (const url of this.dataSources.industryReports) {
       try {
-        const reports = await this.scrapeWebsite(source, {
+        const reports = await this.scrapeWebsite(url, {
           extractionRules: {
             reports: {
               selector: '.report, .analysis, .insight',
               fields: {
                 title: 'h1, h2, .title',
-                summary: '.summary, .excerpt, .description',
-                date: '.date, .published',
+                summary: '.summary, .abstract, p',
+                date: '.date, time',
                 category: '.category, .tag'
               }
             }
           }
         });
-
-        reportData.push(...reports.map(report => ({
-          ...report,
-          source: source,
-          type: 'report',
-          relevanceScore: this.calculateRelevanceScore(report.title + ' ' + report.summary)
-        })));
-
+        
+        allReports.push(...reports);
+        
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
-        console.error(`Error scraping reports from ${source}:`, error.message);
+        console.error(`Error scraping ${url}:`, error.message);
       }
     }
 
-    return reportData;
+    return allReports;
   }
 
   /**
    * Scrape major chain websites for updates
    */
   async scrapeChainWebsites() {
-    console.log('🏪 Scraping chain websites...');
-    const chainData = [];
+    console.log('🏢 Scraping chain websites...');
+    const allUpdates = [];
 
-    for (const chainUrl of this.dataSources.chainWebsites) {
+    for (const url of this.dataSources.chainWebsites) {
       try {
-        const updates = await this.scrapeWebsite(chainUrl, {
+        const updates = await this.scrapeWebsite(url, {
           extractionRules: {
             news: {
               selector: '.news-item, .press-release, .announcement',
               fields: {
                 title: 'h1, h2, h3',
-                content: '.content, .body, p',
+                content: '.content, p',
                 date: '.date, time',
-                category: '.category, .type'
+                type: '.type, .category'
               }
             }
           }
         });
-
-        const chainName = this.extractChainName(chainUrl);
         
-        chainData.push(...updates.map(update => ({
-          ...update,
-          source: chainUrl,
-          chain: chainName,
-          type: 'chain_update',
-          opportunityType: this.identifyOpportunityType(update.title + ' ' + update.content)
-        })));
-
+        allUpdates.push(...updates);
+        
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 3000));
       } catch (error) {
-        console.error(`Error scraping chain ${chainUrl}:`, error.message);
+        console.error(`Error scraping ${url}:`, error.message);
       }
     }
 
-    return chainData;
+    return allUpdates;
   }
 
   /**
-   * Scrape social media for partnership announcements
+   * Monitor social media for industry mentions
    */
   async scrapeSocialMedia() {
     console.log('📱 Monitoring social media...');
-    // Note: This would typically use social media APIs
-    // For demo purposes, we'll simulate social media data
     
+    // For demo purposes, return mock social media data
+    // In production, this would integrate with Twitter API, LinkedIn API, etc.
     return [
       {
         platform: 'twitter',
@@ -248,18 +258,27 @@ class DataIngestionService {
   }
 
   /**
-   * Fallback scraping using cheerio
+   * Fallback scraping using Puppeteer and Cheerio
    */
   async fallbackScraping(url) {
+    let browser;
     try {
-      const response = await axios.get(url, {
-        timeout: 10000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; AFH-Platform-Bot/1.0)'
-        }
+      browser = await this.getBrowser();
+      const page = await browser.newPage();
+      
+      // Set user agent and viewport
+      await page.setUserAgent('Mozilla/5.0 (compatible; AFH-Platform-Bot/1.0)');
+      await page.setViewport({ width: 1280, height: 720 });
+      
+      // Navigate to page
+      await page.goto(url, { 
+        waitUntil: 'networkidle2',
+        timeout: 30000 
       });
-
-      const $ = cheerio.load(response.data);
+      
+      // Get page content
+      const content = await page.content();
+      const $ = cheerio.load(content);
       const articles = [];
 
       // Generic article extraction
@@ -282,7 +301,42 @@ class DataIngestionService {
       return articles;
     } catch (error) {
       console.error(`Fallback scraping error for ${url}:`, error.message);
-      return [];
+      
+      // Try simple axios fallback
+      try {
+        const response = await axios.get(url, {
+          timeout: 10000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; AFH-Platform-Bot/1.0)'
+          }
+        });
+
+        const $ = cheerio.load(response.data);
+        const articles = [];
+
+        $('article, .article, .news-item, .post').each((i, element) => {
+          const $el = $(element);
+          const title = $el.find('h1, h2, h3, .title').first().text().trim();
+          const content = $el.find('p, .content, .excerpt').first().text().trim();
+
+          if (title && content) {
+            articles.push({
+              title,
+              content: content.substring(0, 500),
+              url: url
+            });
+          }
+        });
+
+        return articles;
+      } catch (axiosError) {
+        console.error(`Axios fallback error for ${url}:`, axiosError.message);
+        return [];
+      }
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 
@@ -303,27 +357,19 @@ class DataIngestionService {
 
     for (const item of allData) {
       try {
-        // Use AI to classify and extract opportunity details
-        const classification = await this.classifyWithAI(item);
+        // Use AI to classify and score the opportunity
+        const classification = await this.classifyOpportunity(item);
         
         if (classification.isOpportunity) {
-          const opportunity = {
-            title: item.title,
-            description: item.content || item.summary,
-            source: item.source,
-            type: item.type,
-            channel: classification.channel,
-            priority: classification.priority,
-            confidence: classification.confidence,
-            location: classification.location,
-            potentialValue: classification.potentialValue,
-            tags: classification.tags,
-            extractedAt: new Date().toISOString(),
-            originalData: item
-          };
-
-          processedOpportunities.push(opportunity);
+          processedOpportunities.push({
+            ...item,
+            ...classification,
+            processedAt: new Date().toISOString()
+          });
         }
+        
+        // Rate limiting for AI calls
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.error('Error processing item:', error.message);
       }
@@ -333,117 +379,165 @@ class DataIngestionService {
   }
 
   /**
-   * Use AI to classify content and extract opportunity details
+   * Use AI to classify if content represents a business opportunity
    */
-  async classifyWithAI(item) {
-    const prompt = `
-Analyze this content for AFH (Away-From-Home) channel opportunities:
-
-Title: ${item.title}
-Content: ${item.content || item.summary || ''}
-Source: ${item.source}
-
-Determine:
-1. Is this a potential AFH opportunity? (true/false)
-2. Channel type: QSR, Workplace, Leisure, Education, Healthcare, or Other
-3. Priority level: high, medium, low
-4. Confidence score: 0-100
-5. Location (if mentioned)
-6. Potential value/impact
-7. Relevant tags
-
-Respond in JSON format:
-{
-  "isOpportunity": boolean,
-  "channel": "string",
-  "priority": "string",
-  "confidence": number,
-  "location": "string",
-  "potentialValue": "string",
-  "tags": ["array", "of", "strings"],
-  "reasoning": "brief explanation"
-}
-`;
-
+  async classifyOpportunity(item) {
     try {
-      const response = await this.openai.chat.completions.create({
+      const prompt = `
+        Analyze this content for AFH (Away From Home) food and beverage business opportunities:
+        
+        Title: ${item.title}
+        Content: ${item.content}
+        
+        Determine:
+        1. Is this a potential business opportunity? (yes/no)
+        2. What type of opportunity? (expansion, menu_innovation, partnership, supplier_change, trend)
+        3. Which channel? (QSR, Fast_Casual, Coffee, Convenience, Other)
+        4. Priority level? (high, medium, low)
+        5. Confidence score? (0.0 to 1.0)
+        6. Brief opportunity description (1-2 sentences)
+        
+        Respond in JSON format only.
+      `;
+
+      const completion = await this.openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          {
-            role: 'system',
-            content: 'You are an expert in AFH (Away-From-Home) channel analysis for CPG companies. Analyze content for business opportunities in restaurants, workplaces, leisure venues, education, and healthcare.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: 'You are an expert in AFH food and beverage market analysis. Respond only with valid JSON.' },
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.3,
-        max_tokens: 500
+        max_tokens: 300,
+        temperature: 0.3
       });
 
-      const result = JSON.parse(response.choices[0].message.content);
-      return result;
+      const response = completion.choices[0].message.content;
+      const classification = JSON.parse(response);
+
+      return {
+        isOpportunity: classification.isOpportunity === 'yes',
+        opportunityType: classification.opportunityType,
+        channel: classification.channel,
+        priority: classification.priority,
+        confidence: classification.confidence,
+        description: classification.description,
+        aiProcessed: true
+      };
     } catch (error) {
       console.error('AI classification error:', error.message);
-      // Fallback classification
-      return {
-        isOpportunity: this.containsOpportunityKeywords(item.title + ' ' + (item.content || '')),
-        channel: 'Other',
-        priority: 'medium',
-        confidence: 50,
-        location: '',
-        potentialValue: '',
-        tags: [],
-        reasoning: 'Fallback classification due to AI error'
-      };
+      
+      // Fallback classification based on keywords
+      return this.fallbackClassification(item);
     }
   }
 
   /**
-   * Helper methods
+   * Fallback classification using keyword matching
    */
-  containsOpportunityKeywords(text) {
-    const lowerText = text.toLowerCase();
-    return Object.values(this.opportunityKeywords)
-      .flat()
-      .some(keyword => lowerText.includes(keyword));
-  }
-
-  categorizeContent(text) {
-    const lowerText = text.toLowerCase();
+  fallbackClassification(item) {
+    const content = `${item.title} ${item.content}`.toLowerCase();
     
-    if (this.opportunityKeywords.expansion.some(kw => lowerText.includes(kw))) {
-      return 'expansion';
+    let opportunityType = 'other';
+    let channel = 'Other';
+    let priority = 'low';
+    let confidence = 0.3;
+
+    // Check for opportunity types
+    if (this.opportunityKeywords.expansion.some(keyword => content.includes(keyword))) {
+      opportunityType = 'expansion';
+      priority = 'medium';
+      confidence = 0.6;
+    } else if (this.opportunityKeywords.menu.some(keyword => content.includes(keyword))) {
+      opportunityType = 'menu_innovation';
+      priority = 'high';
+      confidence = 0.7;
+    } else if (this.opportunityKeywords.partnership.some(keyword => content.includes(keyword))) {
+      opportunityType = 'partnership';
+      priority = 'high';
+      confidence = 0.8;
     }
-    if (this.opportunityKeywords.menu.some(kw => lowerText.includes(kw))) {
-      return 'menu';
+
+    // Determine channel
+    if (content.includes('coffee') || content.includes('starbucks')) {
+      channel = 'Coffee';
+    } else if (content.includes('fast casual') || content.includes('chipotle')) {
+      channel = 'Fast_Casual';
+    } else if (content.includes('qsr') || content.includes('mcdonald') || content.includes('burger')) {
+      channel = 'QSR';
+    } else if (content.includes('convenience') || content.includes('7-eleven')) {
+      channel = 'Convenience';
     }
-    if (this.opportunityKeywords.partnership.some(kw => lowerText.includes(kw))) {
-      return 'partnership';
-    }
-    if (this.opportunityKeywords.trends.some(kw => lowerText.includes(kw))) {
-      return 'trends';
-    }
-    
-    return 'general';
+
+    return {
+      isOpportunity: confidence > 0.5,
+      opportunityType,
+      channel,
+      priority,
+      confidence,
+      description: `${opportunityType} opportunity in ${channel} channel`,
+      aiProcessed: false
+    };
   }
 
-  calculateRelevanceScore(text) {
-    const keywords = Object.values(this.opportunityKeywords).flat();
-    const lowerText = text.toLowerCase();
-    const matches = keywords.filter(keyword => lowerText.includes(keyword));
-    return Math.min(100, (matches.length / keywords.length) * 100);
-  }
+  /**
+   * Health check for the data ingestion service
+   */
+  async healthCheck() {
+    try {
+      // Test Crawl4AI connection
+      let crawl4aiStatus = 'unavailable';
+      if (this.crawl4aiUrl && this.crawl4aiKey) {
+        try {
+          await axios.get(`${this.crawl4aiUrl}/health`, {
+            headers: { 'Authorization': `Bearer ${this.crawl4aiKey}` },
+            timeout: 5000
+          });
+          crawl4aiStatus = 'connected';
+        } catch (error) {
+          crawl4aiStatus = 'error';
+        }
+      }
 
-  identifyOpportunityType(text) {
-    return this.categorizeContent(text);
-  }
+      // Test OpenAI connection
+      let openaiStatus = 'unavailable';
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          await this.openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: 'test' }],
+            max_tokens: 5
+          });
+          openaiStatus = 'connected';
+        } catch (error) {
+          openaiStatus = 'error';
+        }
+      }
 
-  extractChainName(url) {
-    const domain = new URL(url).hostname;
-    const name = domain.split('.')[1] || domain.split('.')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1);
+      // Test Puppeteer
+      let puppeteerStatus = 'unavailable';
+      try {
+        const browser = await this.getBrowser();
+        await browser.close();
+        puppeteerStatus = 'connected';
+      } catch (error) {
+        puppeteerStatus = 'error';
+      }
+
+      return {
+        status: 'healthy',
+        services: {
+          crawl4ai: crawl4aiStatus,
+          openai: openaiStatus,
+          puppeteer: puppeteerStatus
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 }
 
