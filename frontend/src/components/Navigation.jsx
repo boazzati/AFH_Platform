@@ -17,7 +17,8 @@ import {
   Groups,
   SmartToy,
   Analytics,
-  TrendingUp
+  TrendingUp,
+  Email
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -32,6 +33,7 @@ const menuItems = [
   { text: 'Expert Network', icon: <Groups />, path: '/expert-network' },
   { text: 'Agentic AI', icon: <SmartToy />, path: '/agentic-ai' },
   { text: 'Predictive Analytics', icon: <TrendingUp />, path: '/predictive-analytics' },
+  { text: 'Outreach Automation', icon: <Email />, path: '/outreach-automation' },
   { text: 'Benchmarking', icon: <Analytics />, path: '/benchmarking' },
 ];
 

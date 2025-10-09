@@ -166,4 +166,16 @@ export const predictiveAnalyticsApi = {
   getRevenuePrediction: (opportunityId) => api.post(`/api/analytics/revenue-prediction/${opportunityId}`)
 };
 
+// OUTREACH AUTOMATION API
+export const outreachApi = {
+  generateEmail: (data) => api.post('/api/outreach/generate-email', data),
+  createSequence: (data) => api.post('/api/outreach/create-sequence', data),
+  controlSequence: (sequenceId, action) => api.post(`/api/outreach/sequence/${sequenceId}/${action}`),
+  getSequence: (sequenceId) => api.get(`/api/outreach/sequence/${sequenceId}`),
+  getAllSequences: () => api.get('/api/outreach/sequences'),
+  generateProposal: (data) => api.post('/api/outreach/generate-proposal', data),
+  scheduleMeeting: (data) => api.post('/api/outreach/schedule-meeting', data),
+  getAnalytics: () => api.get('/api/outreach/analytics')
+};
+
 export default api;
