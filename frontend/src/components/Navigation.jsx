@@ -18,7 +18,8 @@ import {
   SmartToy,
   Analytics,
   TrendingUp,
-  Email
+  Email,
+  AutoAwesome
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -34,6 +35,7 @@ const menuItems = [
   { text: 'Agentic AI', icon: <SmartToy />, path: '/agentic-ai' },
   { text: 'Predictive Analytics', icon: <TrendingUp />, path: '/predictive-analytics' },
   { text: 'Outreach Automation', icon: <Email />, path: '/outreach-automation' },
+  { text: 'Intelligent Matching', icon: <AutoAwesome />, path: '/intelligent-matching' },
   { text: 'Benchmarking', icon: <Analytics />, path: '/benchmarking' },
 ];
 

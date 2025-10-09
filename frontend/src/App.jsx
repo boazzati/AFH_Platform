@@ -16,6 +16,7 @@ import AgenticAI from './pages/AgenticAI';
 import Benchmarking from './pages/Benchmarking';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import OutreachAutomation from './pages/OutreachAutomation';
+import IntelligentMatching from './pages/IntelligentMatching';
 
 // Navigation and onboarding components
 import Navigation from './components/Navigation';
@@ -110,6 +111,7 @@ function AppContent() {
           <Route path="/benchmarking" element={<Benchmarking />} />
           <Route path="/predictive-analytics" element={<PredictiveAnalytics />} />
           <Route path="/outreach-automation" element={<OutreachAutomation />} />
+          <Route path="/intelligent-matching" element={<IntelligentMatching />} />
         </Routes>
       </Box>
       

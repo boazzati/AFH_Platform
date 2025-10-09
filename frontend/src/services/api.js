@@ -166,6 +166,19 @@ export const predictiveAnalyticsApi = {
   getRevenuePrediction: (opportunityId) => api.post(`/api/analytics/revenue-prediction/${opportunityId}`)
 };
 
+// INTELLIGENT MATCHING API
+export const intelligentMatchingApi = {
+  getOverview: () => api.get('/api/matching/overview'),
+  matchProducts: (opportunity) => api.post('/api/matching/products', { opportunity }),
+  runComprehensiveMatching: (opportunityId) => api.post('/api/matching/comprehensive', { opportunityId }),
+  getExpertOverview: () => api.get('/api/experts/overview'),
+  recommendExperts: (opportunity, requirements) => api.post('/api/experts/recommend', { opportunity, requirements }),
+  getExpertsBySpecialization: (specialization) => api.get(`/api/experts/specialization/${specialization}`),
+  getPlaybookOverview: () => api.get('/api/playbooks/overview'),
+  recommendPlaybooks: (opportunity, context) => api.post('/api/playbooks/recommend', { opportunity, context }),
+  generateNextBestActions: (opportunity, context) => api.post('/api/playbooks/actions', { opportunity, context })
+};
+
 // OUTREACH AUTOMATION API
 export const outreachApi = {
   generateEmail: (data) => api.post('/api/outreach/generate-email', data),
