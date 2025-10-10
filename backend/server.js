@@ -1,20 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
-
-// Import all services
-const DataIngestionService = require('./services/dataIngestionService');
-const DataProcessingService = require('./services/dataProcessingService');
-const AutomationService = require('./services/automationService');
-const PredictiveAnalyticsService = require('./services/predictiveAnalyticsService');
-const TrendForecastingService = require('./services/trendForecastingService');
-const RiskRevenueAnalysisService = require('./services/riskRevenueAnalysisService');
-const OutreachService = require('./services/outreachService');
-const SequenceService = require('./services/sequenceService');
-const ProposalService = require('./services/proposalService');
-const MatchingService = require('./services/matchingService');
-const ExpertRecommendationService = require('./services/expertRecommendationService');
-const PlaybookIntelligenceService = require('./services/playbookIntelligenceService');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,20 +10,6 @@ const PORT = process.env.PORT || 3000;
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-
-// Initialize services
-const dataIngestionService = new DataIngestionService();
-const dataProcessingService = new DataProcessingService();
-const automationService = new AutomationService();
-const predictiveAnalyticsService = new PredictiveAnalyticsService();
-const trendForecastingService = new TrendForecastingService();
-const riskRevenueAnalysisService = new RiskRevenueAnalysisService();
-const outreachService = new OutreachService();
-const sequenceService = new SequenceService();
-const proposalService = new ProposalService();
-const matchingService = new MatchingService();
-const expertRecommendationService = new ExpertRecommendationService();
-const playbookIntelligenceService = new PlaybookIntelligenceService();
 
 console.log('🚀 Starting AFH Platform server...');
 console.log('Node version:', process.version);
@@ -55,13 +28,12 @@ const corsOptions = {
       'http://localhost:3001'
     ];
     
-    console.log('🌐 CORS request from origin:', origin);
-    
     if (!origin || allowedOrigins.includes(origin)) {
+      console.log('🌐 CORS request from origin:', origin || 'same-origin');
       console.log('✅ CORS: Origin allowed');
       callback(null, true);
     } else {
-      console.log('❌ CORS: Origin blocked');
+      console.log('❌ CORS: Origin blocked:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -76,44 +48,43 @@ console.log('✅ Express loaded');
 console.log('✅ Express app created');
 console.log('✅ Middleware configured');
 
+// MongoDB connection (optional - will work without it)
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ MongoDB connected'))
+    .catch(err => console.log('⚠️ MongoDB connection failed:', err.message));
+}
+
 // Root route
 app.get('/', (req, res) => {
-  console.log('📍 Root route accessed');
   res.json({
     message: 'AFH Platform API Server',
     status: 'running',
-    version: '3.0.0',
+    version: '2.0.0',
     timestamp: new Date().toISOString(),
     endpoints: {
       health: '/health',
       ai: '/api/ai/*',
       analytics: '/api/analytics/*',
       automation: '/api/automation/*',
-      outreach: '/api/outreach/*',
-      matching: '/api/matching/*',
-      experts: '/api/experts/*',
-      playbooks: '/api/playbooks/*',
       marketSignals: '/api/market-signals',
       dashboard: '/api/dashboard/*'
     }
   });
 });
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
-  console.log('🏥 Health check requested');
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
     services: {
-      database: 'connected',
-      ai: 'operational',
-      automation: 'running',
-      matching: 'active',
-      experts: 'available',
-      playbooks: 'loaded'
-    },
-    version: '3.0.0'
+      database: process.env.MONGODB_URI ? 'connected' : 'not configured',
+      ai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
+      crawler: process.env.CRAWL4AI_API_URL ? 'configured' : 'not configured'
+    }
   });
 });
 
@@ -121,443 +92,254 @@ app.get('/health', (req, res) => {
 app.post('/api/ai/chat', async (req, res) => {
   try {
     console.log('🤖 AI chat request received');
-    const { message, agentType = 'general', context = {} } = req.body;
+    const { message, agentType = 'general', context = [] } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Agent-specific system prompts
     const systemPrompts = {
-      'market-analyst': 'You are a market analyst specializing in the away-from-home food and beverage industry. Provide data-driven insights about market trends, opportunities, and competitive analysis.',
-      'outreach-generator': 'You are an outreach specialist who creates compelling, personalized business development messages for the AFH industry. Focus on value propositions and partnership opportunities.',
-      'competitive-intel': 'You are a competitive intelligence expert in the restaurant and foodservice industry. Analyze competitive landscapes, market positioning, and strategic opportunities.',
-      'strategy-advisor': 'You are a strategic advisor for AFH partnerships. Provide strategic recommendations, risk assessments, and growth opportunities.',
-      'general': 'You are an AI assistant for the AFH Platform, helping with market intelligence, partnership opportunities, and business development in the away-from-home food and beverage sector.'
+      'market-analyst': 'You are a market analyst specializing in the away-from-home food and beverage industry. Provide insights on market trends, opportunities, and competitive analysis.',
+      'outreach-generator': 'You are an outreach specialist who creates compelling, personalized messages for business development in the food and beverage industry.',
+      'competitive-intel': 'You are a competitive intelligence expert who analyzes market positioning, competitor strategies, and industry dynamics.',
+      'general': 'You are an AI assistant helping with away-from-home food and beverage business development.'
     };
-
-    const systemPrompt = systemPrompts[agentType] || systemPrompts['general'];
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompts[agentType] || systemPrompts.general },
+        ...context,
         { role: 'user', content: message }
       ],
-      max_tokens: 500,
+      max_tokens: 1000,
       temperature: 0.7
     });
 
-    const response = completion.choices[0].message.content;
-    console.log('✅ AI response generated');
-
     res.json({
-      response: response,
-      agentType: agentType,
+      response: completion.choices[0].message.content,
+      agentType,
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('❌ AI chat error:', error);
     res.status(500).json({ 
-      error: 'Failed to process AI request',
-      details: error.message 
+      error: 'AI service error',
+      message: error.message 
     });
   }
 });
 
-// Dashboard endpoints
-app.get('/api/dashboard/overview', (req, res) => {
-  console.log('📊 Dashboard overview requested');
-  res.json({
-    marketSignals: 127,
-    activeProjects: 23,
-    expertNetwork: 45,
-    automationStatus: 'active',
-    recentActivity: [
-      { type: 'signal', message: 'New QSR opportunity identified', timestamp: new Date().toISOString() },
-      { type: 'project', message: 'Starbucks partnership progressing', timestamp: new Date().toISOString() },
-      { type: 'expert', message: 'New expert added to network', timestamp: new Date().toISOString() }
-    ]
-  });
-});
-
-// Automation endpoints
-app.get('/api/automation/status', (req, res) => {
-  console.log('🤖 Automation status requested');
-  const status = automationService.getAutomationStatus();
-  res.json(status);
-});
-
-app.post('/api/automation/start', (req, res) => {
-  console.log('▶️ Starting automation');
-  const result = automationService.startAutomation();
-  res.json(result);
-});
-
-app.post('/api/automation/stop', (req, res) => {
-  console.log('⏹️ Stopping automation');
-  const result = automationService.stopAutomation();
-  res.json(result);
-});
-
-app.post('/api/automation/collect', async (req, res) => {
-  try {
-    console.log('🔄 Manual data collection triggered');
-    const { mode = 'regular' } = req.body;
-    const result = await dataIngestionService.collectMarketIntelligence(mode);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Manual collection error:', error);
-    res.status(500).json({ error: 'Failed to collect data', details: error.message });
-  }
-});
-
-// Predictive Analytics endpoints
-app.get('/api/analytics/opportunity-scoring', async (req, res) => {
-  try {
-    console.log('📈 Opportunity scoring requested');
-    const result = await predictiveAnalyticsService.getOpportunityScoring();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Opportunity scoring error:', error);
-    res.status(500).json({ error: 'Failed to get opportunity scoring', details: error.message });
-  }
-});
-
-app.get('/api/analytics/trend-forecasting', async (req, res) => {
-  try {
-    console.log('🔮 Trend forecasting requested');
-    const result = await trendForecastingService.getForecastingAnalysis();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Trend forecasting error:', error);
-    res.status(500).json({ error: 'Failed to get trend forecasting', details: error.message });
-  }
-});
-
-app.get('/api/analytics/risk-assessment', async (req, res) => {
-  try {
-    console.log('⚠️ Risk assessment requested');
-    const result = await riskRevenueAnalysisService.getRiskAssessment();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Risk assessment error:', error);
-    res.status(500).json({ error: 'Failed to get risk assessment', details: error.message });
-  }
-});
-
-app.get('/api/analytics/revenue-prediction', async (req, res) => {
-  try {
-    console.log('💰 Revenue prediction requested');
-    const result = await riskRevenueAnalysisService.getRevenuePrediction();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Revenue prediction error:', error);
-    res.status(500).json({ error: 'Failed to get revenue prediction', details: error.message });
-  }
-});
-
-app.post('/api/analytics/comprehensive-analysis', async (req, res) => {
-  try {
-    console.log('🔍 Comprehensive analysis requested');
-    const { opportunityId } = req.body;
-    const result = await predictiveAnalyticsService.runComprehensiveAnalysis(opportunityId);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Comprehensive analysis error:', error);
-    res.status(500).json({ error: 'Failed to run comprehensive analysis', details: error.message });
-  }
-});
-
-// Outreach Automation endpoints
-app.get('/api/outreach/overview', async (req, res) => {
-  try {
-    console.log('📧 Outreach overview requested');
-    const result = await outreachService.getOutreachOverview();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Outreach overview error:', error);
-    res.status(500).json({ error: 'Failed to get outreach overview', details: error.message });
-  }
-});
-
-app.post('/api/outreach/generate-email', async (req, res) => {
-  try {
-    console.log('✉️ Email generation requested');
-    const { opportunityId, contactInfo, emailType, customization } = req.body;
-    const result = await outreachService.generatePersonalizedEmail(opportunityId, contactInfo, emailType, customization);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Email generation error:', error);
-    res.status(500).json({ error: 'Failed to generate email', details: error.message });
-  }
-});
-
-app.get('/api/outreach/sequences', async (req, res) => {
-  try {
-    console.log('📋 Sequences requested');
-    const result = await sequenceService.getActiveSequences();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Sequences error:', error);
-    res.status(500).json({ error: 'Failed to get sequences', details: error.message });
-  }
-});
-
-app.post('/api/outreach/sequences', async (req, res) => {
-  try {
-    console.log('➕ Creating new sequence');
-    const { opportunityId, contactInfo, sequenceType, customization } = req.body;
-    const result = await sequenceService.createSequence(opportunityId, contactInfo, sequenceType, customization);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Create sequence error:', error);
-    res.status(500).json({ error: 'Failed to create sequence', details: error.message });
-  }
-});
-
-app.get('/api/outreach/proposals', async (req, res) => {
-  try {
-    console.log('📄 Proposals requested');
-    const result = await proposalService.getProposals();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Proposals error:', error);
-    res.status(500).json({ error: 'Failed to get proposals', details: error.message });
-  }
-});
-
-app.post('/api/outreach/proposals', async (req, res) => {
-  try {
-    console.log('📝 Generating proposal');
-    const { opportunityId, requirements, customization } = req.body;
-    const result = await proposalService.generateProposal(opportunityId, requirements, customization);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Generate proposal error:', error);
-    res.status(500).json({ error: 'Failed to generate proposal', details: error.message });
-  }
-});
-
-// Intelligent Matching endpoints
-app.get('/api/matching/overview', async (req, res) => {
-  try {
-    console.log('🎯 Matching overview requested');
-    const stats = matchingService.getMatchingStatistics();
-    res.json({
-      success: true,
-      statistics: stats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Matching overview error:', error);
-    res.status(500).json({ error: 'Failed to get matching overview', details: error.message });
-  }
-});
-
-app.post('/api/matching/products', async (req, res) => {
-  try {
-    console.log('🏭 Product matching requested');
-    const { opportunity } = req.body;
-    const result = await matchingService.matchOpportunityToProducts(opportunity);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Product matching error:', error);
-    res.status(500).json({ error: 'Failed to match products', details: error.message });
-  }
-});
-
-app.post('/api/matching/comprehensive', async (req, res) => {
-  try {
-    console.log('🔍 Comprehensive matching requested');
-    const { opportunityId } = req.body;
-    
-    // Mock opportunity for demonstration
-    const mockOpportunity = {
-      id: opportunityId,
-      title: 'Starbucks Menu Innovation Partnership',
-      channel: 'Coffee',
-      description: 'Partnership opportunity for menu innovation and product development',
-      priority: 'high',
-      estimatedRevenue: '$3.2M'
-    };
-
-    // Run all matching services
-    const [productMatches, expertRecommendations, playbookSuggestions, nextBestActions] = await Promise.all([
-      matchingService.matchOpportunityToProducts(mockOpportunity),
-      expertRecommendationService.recommendExperts(mockOpportunity),
-      playbookIntelligenceService.recommendPlaybooks(mockOpportunity),
-      playbookIntelligenceService.generateNextBestActions(mockOpportunity)
-    ]);
-
-    res.json({
-      success: true,
-      opportunity: mockOpportunity,
-      productMatches: productMatches,
-      expertRecommendations: expertRecommendations,
-      playbookSuggestions: playbookSuggestions,
-      nextBestActions: nextBestActions,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ Comprehensive matching error:', error);
-    res.status(500).json({ error: 'Failed to run comprehensive matching', details: error.message });
-  }
-});
-
-// Expert Recommendation endpoints
-app.get('/api/experts/overview', async (req, res) => {
-  try {
-    console.log('👥 Expert overview requested');
-    const stats = expertRecommendationService.getExpertStatistics();
-    res.json({
-      success: true,
-      statistics: stats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Expert overview error:', error);
-    res.status(500).json({ error: 'Failed to get expert overview', details: error.message });
-  }
-});
-
-app.post('/api/experts/recommend', async (req, res) => {
-  try {
-    console.log('🎯 Expert recommendation requested');
-    const { opportunity, requirements } = req.body;
-    const result = await expertRecommendationService.recommendExperts(opportunity, requirements);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Expert recommendation error:', error);
-    res.status(500).json({ error: 'Failed to recommend experts', details: error.message });
-  }
-});
-
-app.get('/api/experts/specialization/:specialization', async (req, res) => {
-  try {
-    console.log('🔍 Experts by specialization requested');
-    const { specialization } = req.params;
-    const result = await expertRecommendationService.getExpertsBySpecialization(specialization);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Experts by specialization error:', error);
-    res.status(500).json({ error: 'Failed to get experts by specialization', details: error.message });
-  }
-});
-
-// Playbook Intelligence endpoints
-app.get('/api/playbooks/overview', async (req, res) => {
-  try {
-    console.log('📚 Playbook overview requested');
-    const stats = playbookIntelligenceService.getPlaybookStatistics();
-    res.json({
-      success: true,
-      statistics: stats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Playbook overview error:', error);
-    res.status(500).json({ error: 'Failed to get playbook overview', details: error.message });
-  }
-});
-
-app.post('/api/playbooks/recommend', async (req, res) => {
-  try {
-    console.log('📖 Playbook recommendation requested');
-    const { opportunity, context } = req.body;
-    const result = await playbookIntelligenceService.recommendPlaybooks(opportunity, context);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Playbook recommendation error:', error);
-    res.status(500).json({ error: 'Failed to recommend playbooks', details: error.message });
-  }
-});
-
-app.post('/api/playbooks/actions', async (req, res) => {
-  try {
-    console.log('🎯 Next best actions requested');
-    const { opportunity, context } = req.body;
-    const result = await playbookIntelligenceService.generateNextBestActions(opportunity, context);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Next best actions error:', error);
-    res.status(500).json({ error: 'Failed to generate next best actions', details: error.message });
-  }
-});
-
-// Market Signals endpoints (simplified for demo)
+// Market Signals endpoints
 app.get('/api/market-signals', (req, res) => {
   console.log('📡 Market signals requested');
-  res.json([
+  
+  const mockSignals = [
     {
       id: 1,
-      title: 'Starbucks Menu Innovation Opportunity',
-      channel: 'Coffee',
+      title: 'Starbucks Expands Plant-Based Menu',
+      description: 'New partnership opportunity for plant-based protein suppliers',
+      channel: 'Coffee Shops',
       priority: 'high',
       confidence: 0.89,
-      estimatedRevenue: '$3.2M',
-      location: 'Seattle, WA',
-      description: 'Partnership opportunity for seasonal menu innovation',
+      revenue_potential: 2800000,
+      location: 'National',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: 2,
+      title: 'McDonald\'s Tests Breakfast Innovation',
+      description: 'Limited-time breakfast items creating supplier opportunities',
+      channel: 'QSR',
+      priority: 'medium',
+      confidence: 0.76,
+      revenue_potential: 1500000,
+      location: 'West Coast',
       timestamp: new Date().toISOString()
     }
-  ]);
+  ];
+  
+  res.json(mockSignals);
 });
 
-// Missing endpoints that frontend is calling
-app.get('/api/playbooks', async (req, res) => {
+app.post('/api/market-signals', async (req, res) => {
   try {
-    const playbooks = await playbookIntelligenceService.getPlaybooks();
-    res.json(playbooks);
+    const { title, description, channel, priority, location } = req.body;
+    
+    // In a real app, save to MongoDB
+    const newSignal = {
+      id: Date.now(),
+      title,
+      description,
+      channel,
+      priority,
+      location,
+      confidence: Math.random() * 0.3 + 0.7, // Random confidence between 0.7-1.0
+      revenue_potential: Math.floor(Math.random() * 5000000) + 500000,
+      timestamp: new Date().toISOString()
+    };
+    
+    res.status(201).json(newSignal);
   } catch (error) {
-    console.error('Error fetching playbooks:', error);
-    res.status(500).json({ error: 'Failed to fetch playbooks' });
+    console.error('Error creating market signal:', error);
+    res.status(500).json({ error: 'Failed to create market signal' });
   }
 });
 
-app.get('/api/experts', async (req, res) => {
+// Projects endpoints
+app.get('/api/projects', (req, res) => {
+  const projects = [
+    {
+      id: 1,
+      name: 'Starbucks Partnership Initiative',
+      status: 'active',
+      progress: 75,
+      revenue_potential: 2500000,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 2,
+      name: 'McDonald\'s Menu Innovation',
+      status: 'planning',
+      progress: 25,
+      revenue_potential: 5000000,
+      created_at: new Date().toISOString()
+    }
+  ];
+  res.json(projects);
+});
+
+app.post('/api/projects', async (req, res) => {
   try {
-    const experts = await expertRecommendationService.getExperts();
-    res.json(experts);
+    const { name, description, revenue_potential } = req.body;
+    
+    const newProject = {
+      id: Date.now(),
+      name,
+      description,
+      status: 'planning',
+      progress: 0,
+      revenue_potential: revenue_potential || 0,
+      created_at: new Date().toISOString()
+    };
+    
+    res.status(201).json(newProject);
   } catch (error) {
-    console.error('Error fetching experts:', error);
-    res.status(500).json({ error: 'Failed to fetch experts' });
+    console.error('Error creating project:', error);
+    res.status(500).json({ error: 'Failed to create project' });
   }
 });
 
-app.get('/api/projects', async (req, res) => {
+// Experts endpoints
+app.get('/api/experts', (req, res) => {
+  const experts = [
+    {
+      id: 1,
+      name: 'Sarah Johnson',
+      specialization: 'QSR Operations',
+      experience: '15 years',
+      success_rate: 0.92,
+      availability: 'available',
+      hourly_rate: 250
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      specialization: 'Menu Innovation',
+      experience: '12 years',
+      success_rate: 0.88,
+      availability: 'busy',
+      hourly_rate: 300
+    }
+  ];
+  res.json(experts);
+});
+
+app.post('/api/experts', async (req, res) => {
   try {
-    // Mock projects data for now
-    const projects = [
-      {
-        id: 1,
-        name: 'Starbucks Partnership Initiative',
-        status: 'active',
-        progress: 75,
-        revenue_potential: 2500000,
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 2,
-        name: 'McDonald\'s Menu Innovation',
-        status: 'planning',
-        progress: 25,
-        revenue_potential: 5000000,
-        created_at: new Date().toISOString()
-      }
-    ];
-    res.json(projects);
+    const { name, specialization, experience, hourly_rate } = req.body;
+    
+    const newExpert = {
+      id: Date.now(),
+      name,
+      specialization,
+      experience,
+      hourly_rate: hourly_rate || 200,
+      success_rate: Math.random() * 0.2 + 0.8, // Random between 0.8-1.0
+      availability: 'available',
+      created_at: new Date().toISOString()
+    };
+    
+    res.status(201).json(newExpert);
   } catch (error) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ error: 'Failed to fetch projects' });
+    console.error('Error creating expert:', error);
+    res.status(500).json({ error: 'Failed to create expert' });
   }
 });
 
+// Playbooks endpoints
+app.get('/api/playbooks', (req, res) => {
+  const playbooks = [
+    {
+      id: 1,
+      title: 'QSR Partnership Playbook',
+      description: 'Comprehensive guide for establishing QSR partnerships',
+      category: 'partnerships',
+      success_rate: 0.85,
+      avg_timeline: '6 months',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 2,
+      title: 'Menu Innovation Strategy',
+      description: 'Framework for introducing new products to restaurant chains',
+      category: 'innovation',
+      success_rate: 0.78,
+      avg_timeline: '9 months',
+      created_at: new Date().toISOString()
+    }
+  ];
+  res.json(playbooks);
+});
+
+// AI-powered playbook generation
 app.post('/api/ai/generate-playbook', async (req, res) => {
   try {
     const { opportunity, requirements } = req.body;
-    const playbook = await playbookIntelligenceService.generatePlaybook(opportunity, requirements);
+    
+    const prompt = `Generate a detailed business development playbook for this opportunity:
+    
+    Opportunity: ${opportunity}
+    Requirements: ${requirements}
+    
+    Please provide a structured playbook with:
+    1. Executive Summary
+    2. Market Analysis
+    3. Strategy & Approach
+    4. Timeline & Milestones
+    5. Risk Assessment
+    6. Success Metrics`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are a business development expert creating detailed playbooks for food and beverage industry partnerships.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7
+    });
+
+    const playbook = {
+      id: Date.now(),
+      title: `Playbook: ${opportunity}`,
+      content: completion.choices[0].message.content,
+      opportunity,
+      requirements,
+      created_at: new Date().toISOString()
+    };
+
     res.json(playbook);
   } catch (error) {
     console.error('Error generating playbook:', error);
@@ -565,15 +347,158 @@ app.post('/api/ai/generate-playbook', async (req, res) => {
   }
 });
 
+// Outreach endpoints
+app.post('/api/outreach/generate-email', async (req, res) => {
+  try {
+    console.log('✉️ Email generation requested');
+    const { recipientName, companyName, opportunity, tone = 'professional' } = req.body;
+
+    const prompt = `Generate a personalized outreach email with these details:
+    
+    Recipient: ${recipientName}
+    Company: ${companyName}
+    Opportunity: ${opportunity}
+    Tone: ${tone}
+    
+    Create a compelling, professional email that introduces our food and beverage solutions and suggests a partnership discussion.`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are an expert business development professional writing personalized outreach emails for the food and beverage industry.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 800,
+      temperature: 0.7
+    });
+
+    const email = {
+      subject: `Partnership Opportunity - ${companyName}`,
+      body: completion.choices[0].message.content,
+      recipientName,
+      companyName,
+      opportunity,
+      tone,
+      created_at: new Date().toISOString()
+    };
+
+    res.json(email);
+  } catch (error) {
+    console.error('❌ Email generation error:', error);
+    res.status(500).json({ 
+      error: 'Email generation failed',
+      message: error.message 
+    });
+  }
+});
+
+// Crawl4AI integration for menu data
 app.post('/api/crawl/menu-data', async (req, res) => {
   try {
     const { url, restaurant_name } = req.body;
-    const menuData = await dataIngestionService.crawlMenuData(url, restaurant_name);
+    
+    // Mock Crawl4AI response for now
+    const menuData = {
+      restaurant: restaurant_name,
+      url,
+      menu_items: [
+        {
+          category: 'Breakfast',
+          items: ['Egg McMuffin', 'Pancakes', 'Hash Browns'],
+          price_range: '$3-8'
+        },
+        {
+          category: 'Lunch/Dinner',
+          items: ['Big Mac', 'Quarter Pounder', 'Chicken McNuggets'],
+          price_range: '$5-12'
+        }
+      ],
+      analysis: {
+        total_items: 25,
+        avg_price: 7.50,
+        categories: 4,
+        last_updated: new Date().toISOString()
+      },
+      crawled_at: new Date().toISOString()
+    };
+    
     res.json(menuData);
   } catch (error) {
     console.error('Error crawling menu data:', error);
     res.status(500).json({ error: 'Failed to crawl menu data' });
   }
+});
+
+// Dashboard overview
+app.get('/api/dashboard/overview', (req, res) => {
+  console.log('📊 Dashboard overview requested');
+  
+  const overview = {
+    metrics: {
+      total_opportunities: 127,
+      active_projects: 8,
+      total_experts: 45,
+      success_rate: 0.78
+    },
+    recent_activity: [
+      {
+        type: 'opportunity',
+        title: 'New Starbucks partnership identified',
+        timestamp: new Date().toISOString()
+      },
+      {
+        type: 'project',
+        title: 'McDonald\'s project milestone reached',
+        timestamp: new Date().toISOString()
+      }
+    ],
+    revenue_pipeline: {
+      total: 45000000,
+      high_probability: 18000000,
+      medium_probability: 15000000,
+      low_probability: 12000000
+    }
+  };
+  
+  res.json(overview);
+});
+
+// Predictive Analytics endpoints
+app.get('/api/analytics/opportunity-scoring', (req, res) => {
+  const data = {
+    totalOpportunities: 127,
+    averageScore: 78,
+    highPriorityCount: 23,
+    channelDistribution: [
+      { channel: 'QSR', count: 45, avgScore: 82 },
+      { channel: 'Fast Casual', count: 32, avgScore: 85 },
+      { channel: 'Casual Dining', count: 28, avgScore: 74 },
+      { channel: 'Coffee Shops', count: 22, avgScore: 88 }
+    ]
+  };
+  res.json(data);
+});
+
+app.get('/api/analytics/trend-forecasting', (req, res) => {
+  const data = {
+    overallConfidence: 89,
+    marketGrowth: '+18%',
+    trends: [
+      {
+        category: 'Consumer Behavior',
+        trend: 'Health-conscious dining surge',
+        confidence: 94,
+        impact: 'high'
+      },
+      {
+        category: 'Technology',
+        trend: 'AI-powered personalization',
+        confidence: 87,
+        impact: 'high'
+      }
+    ]
+  };
+  res.json(data);
 });
 
 // Error handling middleware
