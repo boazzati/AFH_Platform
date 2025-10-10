@@ -505,6 +505,77 @@ app.get('/api/market-signals', (req, res) => {
   ]);
 });
 
+// Missing endpoints that frontend is calling
+app.get('/api/playbooks', async (req, res) => {
+  try {
+    const playbooks = await playbookIntelligenceService.getPlaybooks();
+    res.json(playbooks);
+  } catch (error) {
+    console.error('Error fetching playbooks:', error);
+    res.status(500).json({ error: 'Failed to fetch playbooks' });
+  }
+});
+
+app.get('/api/experts', async (req, res) => {
+  try {
+    const experts = await expertRecommendationService.getExperts();
+    res.json(experts);
+  } catch (error) {
+    console.error('Error fetching experts:', error);
+    res.status(500).json({ error: 'Failed to fetch experts' });
+  }
+});
+
+app.get('/api/projects', async (req, res) => {
+  try {
+    // Mock projects data for now
+    const projects = [
+      {
+        id: 1,
+        name: 'Starbucks Partnership Initiative',
+        status: 'active',
+        progress: 75,
+        revenue_potential: 2500000,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        name: 'McDonald\'s Menu Innovation',
+        status: 'planning',
+        progress: 25,
+        revenue_potential: 5000000,
+        created_at: new Date().toISOString()
+      }
+    ];
+    res.json(projects);
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+});
+
+app.post('/api/ai/generate-playbook', async (req, res) => {
+  try {
+    const { opportunity, requirements } = req.body;
+    const playbook = await playbookIntelligenceService.generatePlaybook(opportunity, requirements);
+    res.json(playbook);
+  } catch (error) {
+    console.error('Error generating playbook:', error);
+    res.status(500).json({ error: 'Failed to generate playbook' });
+  }
+});
+
+app.post('/api/crawl/menu-data', async (req, res) => {
+  try {
+    const { url, restaurant_name } = req.body;
+    const menuData = await dataIngestionService.crawlMenuData(url, restaurant_name);
+    res.json(menuData);
+  } catch (error) {
+    console.error('Error crawling menu data:', error);
+    res.status(500).json({ error: 'Failed to crawl menu data' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('💥 Unhandled error:', err);
