@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 
 // Import components
+import PepsiCoDashboard from './pages/PepsiCoDashboard';
 import Dashboard from './pages/Dashboard';
+import GrowthOpportunities from './pages/GrowthOpportunities';
+import PartnershipEngine from './pages/PartnershipEngine';
+import SuccessTracking from './pages/SuccessTracking';
+
+// Legacy pages for backward compatibility
 import MarketMapping from './pages/MarketMapping';
 import PlaybookGenerator from './pages/PlaybookGenerator';
 import ExecutionEngine from './pages/ExecutionEngine';
@@ -19,58 +25,13 @@ import OutreachAutomation from './pages/OutreachAutomation';
 import IntelligentMatching from './pages/IntelligentMatching';
 
 // Navigation and onboarding components
-import Navigation from './components/Navigation';
+import PepsiCoNavigation from './components/PepsiCoNavigation';
 import OnboardingTour from './components/OnboardingTour';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          borderRadius: 12,
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 600,
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: 6,
-        },
-      },
-    },
-  },
-});
+// PepsiCo Theme
+import { pepsicoBrandTheme } from './theme/pepsico-theme';
+
+
 
 function AppContent() {
   const location = useLocation();
@@ -98,20 +59,26 @@ function AppContent() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <Navigation />
+      <PepsiCoNavigation />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/market-mapping" element={<MarketMapping />} />
-          <Route path="/playbook-generator" element={<PlaybookGenerator />} />
-          <Route path="/execution-engine" element={<ExecutionEngine />} />
-          <Route path="/data-integration" element={<DataIntegration />} />
-          <Route path="/expert-network" element={<ExpertNetwork />} />
-          <Route path="/agentic-ai" element={<AgenticAI />} />
-          <Route path="/benchmarking" element={<Benchmarking />} />
-          <Route path="/predictive-analytics" element={<PredictiveAnalytics />} />
-          <Route path="/outreach-automation" element={<OutreachAutomation />} />
-          <Route path="/intelligent-matching" element={<IntelligentMatching />} />
+          {/* New PepsiCo Simplified Routes */}
+          <Route path="/" element={<PepsiCoDashboard />} />
+          <Route path="/growth-opportunities" element={<GrowthOpportunities />} />
+          <Route path="/partnership-engine" element={<PartnershipEngine />} />
+          <Route path="/success-tracking" element={<SuccessTracking />} />
+          
+          {/* Legacy routes for backward compatibility */}
+          <Route path="/market-mapping" element={<GrowthOpportunities />} />
+          <Route path="/predictive-analytics" element={<GrowthOpportunities />} />
+          <Route path="/intelligent-matching" element={<GrowthOpportunities />} />
+          <Route path="/playbook-generator" element={<PartnershipEngine />} />
+          <Route path="/execution-engine" element={<PartnershipEngine />} />
+          <Route path="/outreach-automation" element={<PartnershipEngine />} />
+          <Route path="/agentic-ai" element={<PartnershipEngine />} />
+          <Route path="/expert-network" element={<SuccessTracking />} />
+          <Route path="/benchmarking" element={<SuccessTracking />} />
+          <Route path="/data-integration" element={<SuccessTracking />} />
         </Routes>
       </Box>
       
@@ -153,7 +120,7 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={pepsicoBrandTheme}>
       <CssBaseline />
       <Router>
         <AppContent />
