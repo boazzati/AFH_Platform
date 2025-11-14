@@ -438,3 +438,4 @@ function getTimeToCloseForIndustry(industry) {
 }
 
 module.exports = router;
+// Railway deployment trigger Fri Nov 14 12:10:16 EST 2025
