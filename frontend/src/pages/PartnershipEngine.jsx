@@ -18,7 +18,18 @@ import {
   ListItemAvatar,
   Divider,
   LinearProgress,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
   SmartToy,
@@ -31,7 +42,12 @@ import {
   TrendingUp,
   CheckCircle,
   Schedule,
-  Person
+  Person,
+  Close,
+  ExpandMore,
+  AccessTime,
+  TrendingUp as TrendingUpIcon,
+  AttachMoney
 } from '@mui/icons-material';
 import { pepsicoBrandColors } from '../theme/pepsico-theme';
 
@@ -49,6 +65,21 @@ const PartnershipEngine = () => {
   // State for dynamic playbooks
   const [dynamicPlaybooks, setDynamicPlaybooks] = useState([]);
   const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
+  
+  // State for playbook modal
+  const [selectedPlaybook, setSelectedPlaybook] = useState(null);
+  const [showPlaybookModal, setShowPlaybookModal] = useState(false);
+  
+  // Handle viewing full playbook
+  const handleViewPlaybook = (playbook) => {
+    setSelectedPlaybook(playbook);
+    setShowPlaybookModal(true);
+  };
+  
+  const handleClosePlaybookModal = () => {
+    setShowPlaybookModal(false);
+    setSelectedPlaybook(null);
+  };
 
   // Generate a new playbook
   const generateNewPlaybook = async (industry, target, region = 'Global') => {
@@ -333,8 +364,7 @@ const PartnershipEngine = () => {
           }}
           onClick={() => {
             if (playbook.isGenerated && playbook.fullPlaybook) {
-              // Show detailed playbook view
-              console.log('Full playbook:', playbook.fullPlaybook);
+              handleViewPlaybook(playbook.fullPlaybook);
             }
           }}
         >
@@ -711,6 +741,265 @@ const PartnershipEngine = () => {
           </Grid>
         </Grid>
       )}
+      
+      {/* Playbook Detail Modal */}
+      <Dialog
+        open={showPlaybookModal}
+        onClose={handleClosePlaybookModal}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          bgcolor: `${pepsicoBrandColors.primary.navy}10`,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              {selectedPlaybook?.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              AI-Generated Partnership Strategy
+            </Typography>
+          </Box>
+          <IconButton onClick={handleClosePlaybookModal}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ p: 0 }}>
+          {selectedPlaybook && (
+            <Box>
+              {/* Overview Section */}
+              <Box sx={{ p: 3, bgcolor: `${pepsicoBrandColors.primary.navy}05` }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Avatar sx={{ 
+                        bgcolor: pepsicoBrandColors.secondary.green,
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1
+                      }}>
+                        <TrendingUpIcon sx={{ fontSize: 30 }} />
+                      </Avatar>
+                      <Typography variant="h4" fontWeight={600} color="success.main">
+                        {selectedPlaybook.successRate}%
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Success Rate
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Avatar sx={{ 
+                        bgcolor: pepsicoBrandColors.secondary.orange,
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1
+                      }}>
+                        <AttachMoney sx={{ fontSize: 30 }} />
+                      </Avatar>
+                      <Typography variant="h6" fontWeight={600}>
+                        {selectedPlaybook.averageRevenue}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Revenue Potential
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Avatar sx={{ 
+                        bgcolor: pepsicoBrandColors.primary.blue,
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1
+                      }}>
+                        <AccessTime sx={{ fontSize: 30 }} />
+                      </Avatar>
+                      <Typography variant="h6" fontWeight={600}>
+                        {selectedPlaybook.timeToClose}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Timeline
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Avatar sx={{ 
+                        bgcolor: pepsicoBrandColors.primary.navy,
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1
+                      }}>
+                        <Business sx={{ fontSize: 30 }} />
+                      </Avatar>
+                      <Typography variant="h6" fontWeight={600}>
+                        {selectedPlaybook.steps?.length || 0}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Strategic Steps
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+              
+              {/* Target Audience */}
+              <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  🎯 Target Audience
+                </Typography>
+                <Typography variant="body1">
+                  {selectedPlaybook.targetAudience}
+                </Typography>
+              </Box>
+              
+              {/* Key Brands */}
+              <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  🏷️ Key Brands
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {selectedPlaybook.keyBrands?.map((brand, index) => (
+                    <Chip 
+                      key={index}
+                      label={brand}
+                      sx={{ 
+                        bgcolor: `${pepsicoBrandColors.primary.navy}10`,
+                        color: pepsicoBrandColors.primary.navy,
+                        fontWeight: 500
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+              
+              {/* Strategic Steps */}
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+                  📋 Strategic Implementation Steps
+                </Typography>
+                
+                {selectedPlaybook.steps?.map((step, index) => (
+                  <Accordion 
+                    key={index}
+                    sx={{ 
+                      mb: 2,
+                      '&:before': { display: 'none' },
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      borderRadius: 2,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <AccordionSummary
+                      expandIcon={<ExpandMore />}
+                      sx={{
+                        bgcolor: `${pepsicoBrandColors.primary.navy}05`,
+                        '&:hover': {
+                          bgcolor: `${pepsicoBrandColors.primary.navy}10`
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                        <Avatar sx={{ 
+                          bgcolor: pepsicoBrandColors.primary.navy,
+                          width: 32,
+                          height: 32,
+                          fontSize: '0.875rem'
+                        }}>
+                          {step.stepNumber}
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {step.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Duration: {step.duration}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ p: 3 }}>
+                      <Typography variant="body2" sx={{ mb: 2 }}>
+                        {step.description}
+                      </Typography>
+                      
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        Key Actions:
+                      </Typography>
+                      <List dense>
+                        {step.keyActions?.map((action, actionIndex) => (
+                          <ListItem key={actionIndex} sx={{ py: 0.5 }}>
+                            <ListItemText 
+                              primary={`• ${action}`}
+                              primaryTypographyProps={{ variant: 'body2' }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                      
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, mt: 2 }}>
+                        Success Metrics:
+                      </Typography>
+                      <List dense>
+                        {step.successMetrics?.map((metric, metricIndex) => (
+                          <ListItem key={metricIndex} sx={{ py: 0.5 }}>
+                            <ListItemText 
+                              primary={`✓ ${metric}`}
+                              primaryTypographyProps={{ 
+                                variant: 'body2',
+                                color: 'success.main'
+                              }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
+          <Button 
+            onClick={handleClosePlaybookModal}
+            variant="outlined"
+            sx={{ 
+              borderColor: pepsicoBrandColors.primary.navy,
+              color: pepsicoBrandColors.primary.navy
+            }}
+          >
+            Close
+          </Button>
+          <Button 
+            variant="contained"
+            sx={{ 
+              background: `linear-gradient(135deg, ${pepsicoBrandColors.primary.navy} 0%, ${pepsicoBrandColors.primary.blue} 100%)`,
+            }}
+          >
+            Export Playbook
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
