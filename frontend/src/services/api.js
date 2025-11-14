@@ -191,4 +191,14 @@ export const outreachApi = {
   getAnalytics: () => api.get('/api/outreach/analytics')
 };
 
+// PARTNERSHIP API (for Benchmarking component)
+export const partnershipAPI = {
+  getPartnershipData: () => api.get('/api/partnerships'),
+  analyzePartnership: (data) => api.post('/api/partnerships/analyze', data),
+  getBenchmarkData: () => api.get('/api/partnerships/benchmark')
+};
+
+// Add partnershipAPI alias for compatibility
+export const partnershipApi = partnershipAPI;
+
 export default api;
