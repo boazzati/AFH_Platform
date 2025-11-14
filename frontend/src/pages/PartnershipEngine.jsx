@@ -46,7 +46,48 @@ const PartnershipEngine = () => {
     }
   ]);
 
-  // PepsiCo Partnership Playbooks
+  // State for dynamic playbooks
+  const [dynamicPlaybooks, setDynamicPlaybooks] = useState([]);
+  const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
+
+  // Generate a new playbook
+  const generateNewPlaybook = async (industry, target, region = 'Global') => {
+    setIsGeneratingPlaybook(true);
+    try {
+      const response = await fetch('https://afhplatform-production.up.railway.app/api/playbooks/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ industry, target, region })
+      });
+      
+      const data = await response.json();
+      
+      if (data.playbook) {
+        const newPlaybook = {
+          id: Date.now(),
+          title: data.playbook.title,
+          category: data.playbook.industryInsights?.demographics || industry,
+          description: data.playbook.steps[0]?.description || 'AI-generated partnership strategy',
+          steps: data.playbook.steps.length,
+          duration: data.playbook.timeToClose,
+          successRate: `${data.playbook.successRate}%`,
+          brands: data.playbook.keyBrands || ['PepsiCo Products'],
+          isGenerated: true,
+          fullPlaybook: data.playbook
+        };
+        
+        setDynamicPlaybooks(prev => [newPlaybook, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error generating playbook:', error);
+    } finally {
+      setIsGeneratingPlaybook(false);
+    }
+  };
+
+  // PepsiCo Partnership Playbooks (Static Examples)
   const partnershipPlaybooks = [
     {
       id: 1,
@@ -143,7 +184,7 @@ const PartnershipEngine = () => {
     'Suggest partnership terms for corporate wellness programs'
   ];
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!chatMessage.trim()) return;
     
     setChatHistory(prev => [...prev, {
@@ -151,13 +192,62 @@ const PartnershipEngine = () => {
       message: chatMessage
     }]);
     
-    // Simulate AI response
-    setTimeout(() => {
-      setChatHistory(prev => [...prev, {
-        type: 'assistant',
-        message: 'I\'ll help you with that! Based on PepsiCo\'s AFH strategy and current market trends, here are my recommendations...'
-      }]);
-    }, 1000);
+    // Show loading message
+    setChatHistory(prev => [...prev, {
+      type: 'assistant',
+      message: 'Generating your partnership playbook... 🚀'
+    }]);
+    
+    try {
+      // Call the real backend API
+      const response = await fetch('https://afhplatform-production.up.railway.app/api/playbooks/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          industry: 'general',
+          target: chatMessage,
+          region: 'Global'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.playbook) {
+        const playbook = data.playbook;
+        const responseMessage = `✅ **${playbook.title}**\n\n` +
+          `📊 **Success Rate:** ${playbook.successRate}%\n` +
+          `💰 **Revenue Potential:** ${playbook.averageRevenue}\n` +
+          `⏱️ **Timeline:** ${playbook.timeToClose}\n\n` +
+          `**Key Steps:**\n` +
+          playbook.steps.slice(0, 3).map((step, i) => 
+            `${i + 1}. ${step.title} (${step.duration})`
+          ).join('\n') +
+          `\n\n🎯 This playbook includes ${playbook.steps.length} detailed steps with actionable insights for ${playbook.targetAudience}.`;
+        
+        setChatHistory(prev => {
+          const newHistory = [...prev];
+          newHistory[newHistory.length - 1] = {
+            type: 'assistant',
+            message: responseMessage
+          };
+          return newHistory;
+        });
+      } else {
+        throw new Error('No playbook generated');
+      }
+    } catch (error) {
+      console.error('Error generating playbook:', error);
+      setChatHistory(prev => {
+        const newHistory = [...prev];
+        newHistory[newHistory.length - 1] = {
+          type: 'assistant',
+          message: 'I apologize, but I\'m having trouble connecting to the playbook generation service right now. Please try again in a moment, or contact support if the issue persists.'
+        };
+        return newHistory;
+      });
+    }
     
     setChatMessage('');
   };
@@ -241,8 +331,14 @@ const PartnershipEngine = () => {
           sx={{ 
             background: `linear-gradient(135deg, ${pepsicoBrandColors.primary.navy} 0%, ${pepsicoBrandColors.primary.blue} 100%)`,
           }}
+          onClick={() => {
+            if (playbook.isGenerated && playbook.fullPlaybook) {
+              // Show detailed playbook view
+              console.log('Full playbook:', playbook.fullPlaybook);
+            }
+          }}
         >
-          Launch Playbook
+          {playbook.isGenerated ? 'View Full Playbook' : 'Launch Playbook'}
         </Button>
       </CardContent>
     </Card>
@@ -457,13 +553,105 @@ const PartnershipEngine = () => {
 
       {/* Partnership Playbooks Tab */}
       {selectedTab === 1 && (
-        <Grid container spacing={3}>
-          {partnershipPlaybooks.map((playbook) => (
-            <Grid item xs={12} md={6} lg={4} key={playbook.id}>
-              <PlaybookCard playbook={playbook} />
-            </Grid>
-          ))}
-        </Grid>
+        <Box>
+          {/* Quick Generate Section */}
+          <Card sx={{ mb: 3, bgcolor: `${pepsicoBrandColors.primary.navy}10` }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                🚀 Generate New Partnership Playbook
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('concerts', 'Tomorrowland Festival', 'Europe')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎵 Concert Partnership
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('gaming', 'T1 Esports', 'Asia')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎮 Gaming Partnership
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('retail', 'Premium Convenience Stores', 'Global')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🏪 Retail Partnership
+                  </Button>
+                </Grid>
+              </Grid>
+              {isGeneratingPlaybook && (
+                <Box sx={{ mt: 2 }}>
+                  <LinearProgress sx={{ 
+                    bgcolor: `${pepsicoBrandColors.primary.navy}20`,
+                    '& .MuiLinearProgress-bar': { bgcolor: pepsicoBrandColors.primary.navy }
+                  }} />
+                  <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
+                    Generating AI-powered partnership playbook...
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+
+          <Grid container spacing={3}>
+            {/* Dynamic AI-Generated Playbooks */}
+            {dynamicPlaybooks.map((playbook) => (
+              <Grid item xs={12} md={6} lg={4} key={playbook.id}>
+                <Box sx={{ position: 'relative' }}>
+                  <Chip 
+                    label="AI Generated" 
+                    size="small" 
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 1,
+                      bgcolor: pepsicoBrandColors.secondary.green,
+                      color: 'white',
+                      fontWeight: 600
+                    }} 
+                  />
+                  <PlaybookCard playbook={playbook} />
+                </Box>
+              </Grid>
+            ))}
+            
+            {/* Static Template Playbooks */}
+            {partnershipPlaybooks.map((playbook) => (
+              <Grid item xs={12} md={6} lg={4} key={playbook.id}>
+                <PlaybookCard playbook={playbook} />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       )}
 
       {/* Outreach Campaigns Tab */}
