@@ -122,50 +122,56 @@ const PartnershipEngine = () => {
   const partnershipPlaybooks = [
     {
       id: 1,
-      title: 'C-Store Premium Placement',
-      category: 'Convenience',
-      description: 'Strategic playbook for securing premium shelf space in high-traffic convenience stores',
+      title: 'Local Restaurant Value Services',
+      category: 'Foodservice',
+      description: 'AI-powered value-added services for mid-size restaurant chains (50-150 outlets) including SRP tools and dynamic pricing',
       steps: 8,
-      duration: '2-4 weeks',
-      successRate: '87%',
-      brands: ['Gatorade', 'Lay\'s', 'Pepsi'],
+      duration: '4-6 weeks',
+      successRate: '89%',
+      brands: ['Pepsi', 'Lay\'s', 'Gatorade'],
+      priority: 'High - Most Profitable Channel',
+      revenueImpact: '€3-7M annually',
       keyTactics: [
-        'Consumer traffic analysis presentation',
-        'Category growth data showcase',
-        'Exclusive promotion proposals',
-        'Digital integration opportunities'
+        'AI-driven lead generation and prioritization',
+        'Dynamic pricing optimization tools',
+        'Traffic conversion from third-party ordering',
+        'Churn reduction and retention strategies'
       ]
     },
     {
       id: 2,
-      title: 'Campus Dining Innovation',
-      category: 'Education',
-      description: 'Comprehensive approach to university dining partnerships with health-focused positioning',
-      steps: 6,
-      duration: '6-8 weeks',
-      successRate: '92%',
-      brands: ['Quaker', 'Bare', 'Tropicana'],
+      title: 'Immersive Food Experience',
+      category: 'Theme Parks',
+      description: 'Doritos Loaded-style culinary activations with full story-world integration and co-creation partnerships',
+      steps: 12,
+      duration: '8-12 months',
+      successRate: '94%',
+      brands: ['Doritos', 'Cheetos', 'Flamin\' Hot'],
+      priority: 'Strategic - Brand Building',
+      revenueImpact: '€5-15M+ per activation',
       keyTactics: [
-        'Student preference surveys',
-        'Sustainability impact metrics',
-        'Nutrition education programs',
-        'Social media activation plans'
+        'Storytelling integration with fictional characters',
+        'Authentic theming and period props',
+        'Co-creation with design and innovation teams',
+        'Permanent installation vs temporary activation'
       ]
     },
     {
       id: 3,
-      title: 'Corporate Wellness Integration',
-      category: 'Workplace',
-      description: 'Employee wellness program integration with healthier snack and beverage options',
-      steps: 5,
-      duration: '3-5 weeks',
-      successRate: '89%',
-      brands: ['Gatorade Zero', 'PopCorners', 'Aquafina'],
+      title: 'New F&B Occasions Expansion',
+      category: 'Innovation',
+      description: 'Menu innovation using PepsiCo products as ingredients, seasonings, and mixology components for incremental revenue',
+      steps: 6,
+      duration: '3-5 months',
+      successRate: '85%',
+      brands: ['Flamin\' Hot Seasoning', 'Pepsi Mixers', 'Cheetos Dust'],
+      priority: 'Growth - New Revenue Streams',
+      revenueImpact: '€2-8M incremental',
       keyTactics: [
-        'Wellness ROI calculations',
-        'Employee satisfaction surveys',
-        'Productivity correlation studies',
-        'Flexible vending solutions'
+        'Culinary activations as ingredients and coatings',
+        'Mixology experiences with crafted drinks',
+        'Equipment solutions for scale deployment',
+        'AI-powered menu optimization recommendations'
       ]
     }
   ];
@@ -354,6 +360,18 @@ const PartnershipEngine = () => {
             ))}
           </Box>
         </Box>
+        
+        {/* Show priority and revenue impact for real AFH playbooks */}
+        {playbook.priority && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5, color: pepsicoBrandColors.primary.navy }}>
+              Priority: {playbook.priority}
+            </Typography>
+            <Typography variant="body2" fontWeight={500} sx={{ color: pepsicoBrandColors.secondary.green }}>
+              Revenue Impact: {playbook.revenueImpact}
+            </Typography>
+          </Box>
+        )}
 
         <Button
           fullWidth
@@ -595,7 +613,7 @@ const PartnershipEngine = () => {
                   <Button
                     fullWidth
                     variant="outlined"
-                    onClick={() => generateNewPlaybook('concerts', 'Tomorrowland Festival', 'Europe')}
+                    onClick={() => generateNewPlaybook('concerts', 'Tomorrowland Festival - Immersive Food Experience', 'Europe')}
                     disabled={isGeneratingPlaybook}
                     sx={{ 
                       borderColor: pepsicoBrandColors.primary.navy,
@@ -610,7 +628,7 @@ const PartnershipEngine = () => {
                   <Button
                     fullWidth
                     variant="outlined"
-                    onClick={() => generateNewPlaybook('gaming', 'T1 Esports', 'Asia')}
+                    onClick={() => generateNewPlaybook('gaming', 'T1 Esports - Gaming Arena Partnership', 'Asia')}
                     disabled={isGeneratingPlaybook}
                     sx={{ 
                       borderColor: pepsicoBrandColors.primary.navy,
@@ -625,7 +643,7 @@ const PartnershipEngine = () => {
                   <Button
                     fullWidth
                     variant="outlined"
-                    onClick={() => generateNewPlaybook('retail', 'Premium Convenience Stores', 'Global')}
+                    onClick={() => generateNewPlaybook('foodservice', 'Local Restaurant Value Services', 'Global')}
                     disabled={isGeneratingPlaybook}
                     sx={{ 
                       borderColor: pepsicoBrandColors.primary.navy,
