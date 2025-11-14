@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { pepsicoBrandColors } from '../theme/pepsico-theme';
-import { successMetrics, recentActivities, afhChannels } from '../data/pepsico-demo-data';
+import { successMetrics, recentActivities, experientialChannels } from '../data/demo-data';
 import { useNavigate } from 'react-router-dom';
 
 // PepsiCo Growth Command Center - Hero Dashboard
@@ -42,10 +42,10 @@ const PepsiCoDashboard = () => {
 
   // Hero metric - Total Smiles Delivered (5-second wow factor)
   const heroMetric = {
-    value: successMetrics.smilesDelivered.current,
-    label: 'Smiles Delivered This Month',
-    growth: `+${successMetrics.smilesDelivered.growth}%`,
-    description: successMetrics.smilesDelivered.description
+    value: successMetrics.experiencesDelivered.current,
+    label: 'Experiences Delivered This Month',
+    growth: `+${successMetrics.experiencesDelivered.growth}%`,
+    description: successMetrics.experiencesDelivered.description
   };
 
   // Real-time growth data for animation
@@ -86,43 +86,24 @@ const PepsiCoDashboard = () => {
       action: () => navigate('/success-tracking')
     }
   ];
-
-  // Channel performance highlights
-  const channelHighlights = [
-    {
-      channel: afhChannels.convenience.name,
-      icon: <Store />,
-      performance: 92,
-      trend: afhChannels.convenience.growth,
-      color: pepsicoBrandColors.secondary.orange,
-      highlight: 'Premium placement secured in 156 new locations'
-    },
-    {
-      channel: afhChannels.foodservice.name,
-      icon: <Restaurant />,
-      performance: 87,
-      trend: afhChannels.foodservice.growth,
-      color: pepsicoBrandColors.primary.blue,
-      highlight: 'Exclusive partnerships with 3 major chains'
-    },
-    {
-      channel: afhChannels.education.name,
-      icon: <School />,
-      performance: 94,
-      trend: afhChannels.education.growth,
-      color: pepsicoBrandColors.secondary.green,
-      highlight: 'Campus wellness programs launched at 12 universities'
-    },
-    {
-      channel: afhChannels.workplace.name,
-      icon: <Business />,
-      performance: 78,
-      trend: afhChannels.workplace.growth,
-      color: pepsicoBrandColors.secondary.red,
-      highlight: 'Workplace vending solutions in 50+ tech companies'
-    }
-  ];
-
+  // Channel highlights for dashboard - EMEAA Experiential Partnerships
+  const channelHighlights = experientialChannels.slice(0, 4).map((channel, index) => {
+    const colors = [
+      pepsicoBrandColors.secondary.orange,
+      pepsicoBrandColors.primary.blue,
+      pepsicoBrandColors.secondary.green,
+      pepsicoBrandColors.secondary.red
+    ];
+    return {
+      channel: channel.name,
+      icon: channel.icon,
+      performance: channel.performance,
+      trend: channel.growth,
+      color: colors[index],
+      highlight: `${channel.description} (${channel.revenue} potential)`,
+      region: channel.region
+    };
+  });
   // Recent wins for momentum
   const recentWins = recentActivities.slice(0, 3).map(activity => ({
     title: activity.title.split(' - ')[0],
@@ -503,10 +484,10 @@ const PepsiCoDashboard = () => {
           fontWeight: 600,
           mb: 1
         }}>
-          "Creating more smiles with every sip and every bite"
+          "Accelerating partnerships across every consumer experience"
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          PepsiCo Away-From-Home Growth Platform • Powered by AI • Built for Scale
+          Partnership Accelerator • Powered by AI • Built for Scale
         </Typography>
       </Box>
     </Box>

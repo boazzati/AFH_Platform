@@ -77,7 +77,7 @@ const PepsiCoLogo = () => (
           lineHeight: 1.2
         }}
       >
-        AFH Growth Platform
+        Partnership Accelerator
       </Typography>
       <Typography 
         variant="caption" 
@@ -87,7 +87,7 @@ const PepsiCoLogo = () => (
           fontStyle: 'italic'
         }}
       >
-        Food. Drinks. Smiles.
+        Accelerating partnerships across every consumer experience
       </Typography>
     </Box>
   </Box>
@@ -222,7 +222,7 @@ const PepsiCoNavigation = () => {
               mb: 0.5
             }}
           >
-            Powered by PepsiCo Innovation
+            Partnership Intelligence Platform
           </Typography>
           <Typography 
             variant="caption" 
@@ -232,7 +232,7 @@ const PepsiCoNavigation = () => {
               fontStyle: 'italic'
             }}
           >
-            "Creating more smiles with every sip and every bite"
+            "Accelerating partnerships across every consumer experience"
           </Typography>
         </Box>
       </Box>
