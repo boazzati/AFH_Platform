@@ -501,6 +501,10 @@ app.get('/api/analytics/trend-forecasting', (req, res) => {
   res.json(data);
 });
 
+// Playbook routes
+const playbookRoutes = require('./routes/playbooks');
+app.use('/api/playbooks', playbookRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('💥 Unhandled error:', err);
