@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Drawer,
   List,
@@ -9,13 +9,18 @@ import {
   Typography,
   Box,
   Divider,
-  Avatar
+  Avatar,
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   TrendingUp,
   Insights,
   Handshake,
   EmojiEvents,
+  Menu,
+  Close
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { pepsicoBrandColors } from '../theme/pepsico-theme';
@@ -96,6 +101,13 @@ const PepsiCoLogo = () => (
 const PepsiCoNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   // Map old paths to new simplified paths
   const pathMapping = {
@@ -116,22 +128,8 @@ const PepsiCoNavigation = () => {
     return pathMapping[location.pathname] || location.pathname;
   };
 
-  return (
-    <Drawer
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          backgroundColor: pepsicoBrandColors.neutral.white,
-          borderRight: `1px solid ${pepsicoBrandColors.neutral.mediumGray}`,
-          boxShadow: '4px 0 16px rgba(0, 51, 102, 0.05)',
-        },
-      }}
-      variant="permanent"
-      anchor="left"
-    >
+  const drawerContent = (
+    <Box>
       <Toolbar sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 3 }}>
         <PepsiCoLogo />
       </Toolbar>
@@ -146,7 +144,12 @@ const PepsiCoNavigation = () => {
             <ListItem
               button
               key={item.text}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                navigate(item.path);
+                if (isMobile) {
+                  setMobileOpen(false);
+                }
+              }}
               selected={isSelected}
               sx={{
                 borderRadius: 3,
@@ -189,9 +192,8 @@ const PepsiCoNavigation = () => {
                   sx={{ 
                     color: isSelected ? 'rgba(255,255,255,0.8)' : pepsicoBrandColors.neutral.darkGray,
                     fontSize: '0.75rem',
-                    lineHeight: 1.2,
-                    mt: 0.5,
-                    display: 'block'
+                    display: 'block',
+                    mt: 0.5
                   }}
                 >
                   {item.description}
@@ -201,42 +203,78 @@ const PepsiCoNavigation = () => {
           );
         })}
       </List>
+    </Box>
+  );
+
+  return (
+    <Box>
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            zIndex: 1300,
+            bgcolor: pepsicoBrandColors.primary.navy,
+            color: 'white',
+            '&:hover': {
+              bgcolor: pepsicoBrandColors.primary.blue,
+            },
+          }}
+        >
+          <Menu />
+        </IconButton>
+      )}
       
-      <Box sx={{ flexGrow: 1 }} />
+      {/* Desktop Drawer */}
+      {!isMobile && (
+        <Drawer
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              backgroundColor: pepsicoBrandColors.neutral.white,
+              borderRight: `1px solid ${pepsicoBrandColors.neutral.mediumGray}`,
+              boxShadow: '4px 0 16px rgba(0, 51, 102, 0.05)',
+            },
+          }}
+          variant="permanent"
+          anchor="left"
+        >
+          {drawerContent}
+        </Drawer>
+      )}
       
-      {/* PepsiCo Brand Footer */}
-      <Box sx={{ p: 2, mt: 'auto' }}>
-        <Divider sx={{ mb: 2 }} />
-        <Box sx={{ 
-          textAlign: 'center',
-          p: 2,
-          borderRadius: 2,
-          background: `linear-gradient(135deg, ${pepsicoBrandColors.neutral.lightGray} 0%, ${pepsicoBrandColors.neutral.mediumGray} 100%)`,
-        }}>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: pepsicoBrandColors.neutral.darkGray,
-              fontWeight: 500,
-              display: 'block',
-              mb: 0.5
-            }}
-          >
-            Partnership Intelligence Platform
-          </Typography>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: pepsicoBrandColors.primary.navy,
-              fontSize: '0.7rem',
-              fontStyle: 'italic'
-            }}
-          >
-            "Accelerating partnerships across every consumer experience"
-          </Typography>
-        </Box>
-      </Box>
-    </Drawer>
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              backgroundColor: pepsicoBrandColors.neutral.white,
+              borderRight: `1px solid ${pepsicoBrandColors.neutral.mediumGray}`,
+              boxShadow: '4px 0 16px rgba(0, 51, 102, 0.05)',
+            },
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+      )}
+    </Box>
   );
 };
 

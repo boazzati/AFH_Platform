@@ -156,69 +156,16 @@ const PartnershipEngine = () => {
         'Permanent installation vs temporary activation'
       ]
     },
-    {
-      id: 3,
-      title: 'New F&B Occasions Expansion',
-      category: 'Innovation',
-      description: 'Menu innovation using PepsiCo products as ingredients, seasonings, and mixology components for incremental revenue',
-      steps: 6,
-      duration: '3-5 months',
-      successRate: '85%',
-      brands: ['Flamin\' Hot Seasoning', 'Pepsi Mixers', 'Cheetos Dust'],
-      priority: 'Growth - New Revenue Streams',
-      revenueImpact: '€2-8M incremental',
-      keyTactics: [
-        'Culinary activations as ingredients and coatings',
-        'Mixology experiences with crafted drinks',
-        'Equipment solutions for scale deployment',
-        'AI-powered menu optimization recommendations'
-      ]
-    }
+
   ];
 
-  // Active Outreach Campaigns
-  const outreachCampaigns = [
-    {
-      id: 1,
-      name: 'Northeast C-Store Expansion',
-      status: 'Active',
-      prospects: 24,
-      responses: 8,
-      meetings: 3,
-      deals: 1,
-      responseRate: '33%',
-      nextAction: 'Follow-up calls scheduled for this week'
-    },
-    {
-      id: 2,
-      name: 'University Partnership Drive',
-      status: 'Planning',
-      prospects: 15,
-      responses: 0,
-      meetings: 0,
-      deals: 0,
-      responseRate: '0%',
-      nextAction: 'Campaign launches Monday'
-    },
-    {
-      id: 3,
-      name: 'Tech Company Wellness',
-      status: 'Completed',
-      prospects: 12,
-      responses: 9,
-      meetings: 6,
-      deals: 4,
-      responseRate: '75%',
-      nextAction: 'Contract negotiations in progress'
-    }
-  ];
+
 
   // AI Chat Suggestions
   const chatSuggestions = [
-    'Create a playbook for fast-casual restaurant partnerships',
-    'Generate outreach email for premium convenience stores',
-    'Analyze success factors for campus dining deals',
-    'Suggest partnership terms for corporate wellness programs'
+    'Create a concert festival partnership playbook',
+    'Generate gaming esports partnership strategy',
+    'Analyze theme park collaboration opportunities'
   ];
 
   const handleSendMessage = async () => {
@@ -702,63 +649,7 @@ const PartnershipEngine = () => {
         </Box>
       )}
 
-      {/* Outreach Campaigns Tab */}
-      {selectedTab === 2 && (
-        <Grid container spacing={3}>
-          {outreachCampaigns.map((campaign) => (
-            <Grid item xs={12} md={6} key={campaign.id}>
-              <CampaignCard campaign={campaign} />
-            </Grid>
-          ))}
-          
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                  Recent Partnership Activities
-                </Typography>
-                <List>
-                  <ListItem>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: pepsicoBrandColors.secondary.green }}>
-                        <CheckCircle />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary="Metro Convenience Chain - Deal Closed"
-                      secondary="$1.2M annual partnership secured for Gatorade and Lay's placement"
-                    />
-                  </ListItem>
-                  <Divider />
-                  <ListItem>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: pepsicoBrandColors.secondary.orange }}>
-                        <Schedule />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary="University of California - Meeting Scheduled"
-                      secondary="Campus dining partnership discussion set for next Tuesday"
-                    />
-                  </ListItem>
-                  <Divider />
-                  <ListItem>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: pepsicoBrandColors.primary.blue }}>
-                        <Person />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary="Tech Corp Wellness - Proposal Sent"
-                      secondary="Comprehensive wellness program proposal delivered to decision makers"
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
+
       
       {/* Playbook Detail Modal */}
       <Dialog

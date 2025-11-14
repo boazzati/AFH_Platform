@@ -60,7 +60,16 @@ function AppContent() {
   return (
     <Box sx={{ display: 'flex' }}>
       <PepsiCoNavigation />
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: { xs: 1, sm: 2, md: 3 },
+          ml: { xs: 0, md: '280px' }, // Account for sidebar on desktop
+          mt: { xs: '60px', md: 0 }, // Account for mobile menu button
+          minHeight: '100vh'
+        }}
+      >
         <Routes>
           {/* New PepsiCo Simplified Routes */}
           <Route path="/" element={<PepsiCoDashboard />} />
