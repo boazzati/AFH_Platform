@@ -20,7 +20,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  LinearProgress
+  LinearProgress,
+  Alert
 } from '@mui/material';
 import {
   SmartToy,
@@ -65,6 +66,8 @@ const PartnershipEngine = () => {
   ]);
   const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
   const [generatedPlaybooks, setGeneratedPlaybooks] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showGenerationSuccess, setShowGenerationSuccess] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -350,7 +353,7 @@ const PartnershipEngine = () => {
           <Card sx={{ mb: 3, bgcolor: `${pepsicoBrandColors.primary.navy}10` }}>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                🚀 Generate New Partnership Playbook
+                Generate New Partnership Playbook
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
@@ -421,6 +424,23 @@ const PartnershipEngine = () => {
                     Generating AI-powered partnership playbook...
                   </Typography>
                 </Box>
+               )}
+              
+              {/* Success Notification */}
+              {showGenerationSuccess && (
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mt: 2,
+                    animation: 'fadeIn 0.5s ease-in-out',
+                    '@keyframes fadeIn': {
+                      '0%': { opacity: 0, transform: 'translateY(-10px)' },
+                      '100%': { opacity: 1, transform: 'translateY(0)' }
+                    }
+                  }}
+                >
+                  <strong>Success!</strong> New AI-powered partnership playbook generated and added to your collection.
+                </Alert>
               )}
             </CardContent>
           </Card>
@@ -643,31 +663,31 @@ const PartnershipEngine = () => {
               <Box sx={{ mb: 3 }}>
                 <Grid container spacing={3}>
                   <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
-                      <Typography variant="h4" fontWeight={600} color="success.dark">
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: `${pepsicoBrandColors.secondary.green}20`, borderRadius: 1, border: `1px solid ${pepsicoBrandColors.secondary.green}` }}>
+                      <Typography variant="h4" fontWeight={600} color={pepsicoBrandColors.secondary.green}>
                         {selectedPlaybook.successRate}%
                       </Typography>
-                      <Typography variant="caption" color="success.dark">
+                      <Typography variant="caption" color={pepsicoBrandColors.secondary.green}>
                         Success Rate
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
-                      <Typography variant="h4" fontWeight={600} color="primary.dark">
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: `${pepsicoBrandColors.primary.navy}15`, borderRadius: 1, border: `1px solid ${pepsicoBrandColors.primary.navy}` }}>
+                      <Typography variant="h4" fontWeight={600} color={pepsicoBrandColors.primary.navy}>
                         {selectedPlaybook.averageRevenue}
                       </Typography>
-                      <Typography variant="caption" color="primary.dark">
+                      <Typography variant="caption" color={pepsicoBrandColors.primary.navy}>
                         Revenue Potential
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
-                      <Typography variant="h4" fontWeight={600} color="warning.dark">
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: `${pepsicoBrandColors.accent.orange}20`, borderRadius: 1, border: `1px solid ${pepsicoBrandColors.accent.orange}` }}>
+                      <Typography variant="h4" fontWeight={600} color={pepsicoBrandColors.accent.orange}>
                         {selectedPlaybook.duration}
                       </Typography>
-                      <Typography variant="caption" color="warning.dark">
+                      <Typography variant="caption" color={pepsicoBrandColors.accent.orange}>
                         Timeline
                       </Typography>
                     </Box>
@@ -685,7 +705,15 @@ const PartnershipEngine = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   {selectedPlaybook.brands.map((brand, index) => (
-                    <Chip key={index} label={brand} color="primary" />
+                    <Chip 
+                      key={index} 
+                      label={brand} 
+                      sx={{ 
+                        bgcolor: `${pepsicoBrandColors.primary.navy}10`,
+                        color: pepsicoBrandColors.primary.navy,
+                        border: `1px solid ${pepsicoBrandColors.primary.navy}30`
+                      }} 
+                    />
                   ))}
                 </Box>
               </Box>
