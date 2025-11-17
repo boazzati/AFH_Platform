@@ -48,96 +48,89 @@ const OnboardingTour = ({ open, onClose, currentPage }) => {
 
   const tourSteps = [
     {
-      title: 'Welcome to AFH Platform',
-      content: 'Your AI-powered solution for accelerating Away-From-Home channel growth',
-      description: 'This platform combines market intelligence, AI assistance, and expert networks to help CPG companies succeed in the AFH channel.',
+      title: 'Welcome to Partnership Accelerator',
+      content: 'Your AI-powered solution for PepsiCo AFH partnership growth',
+      description: 'This platform combines AI-generated playbooks, intelligent partnership recommendations, and performance tracking to accelerate your Away-From-Home success.',
       features: [
-        'Real-time market mapping and opportunity identification',
-        'AI-powered outreach and proposal generation',
-        'Expert network for specialized knowledge',
-        'Performance tracking and analytics'
+        'AI-powered partnership playbook generation',
+        'Smart partnership recommendations and outreach',
+        'Real-time performance tracking and analytics',
+        'Growth opportunity discovery across channels'
       ],
       icon: <Business color="primary" />
     },
     {
-      title: 'Market Mapping Engine',
-      content: 'Discover and track AFH opportunities across all channels',
-      description: 'Our market mapping engine continuously monitors restaurant openings, menu partnerships, and channel opportunities.',
+      title: 'Partnership Playbooks',
+      content: 'Generate AI-powered strategic partnership playbooks',
+      description: 'Create comprehensive 8-step partnership strategies for gaming, concerts, theme parks, and retail channels.',
       features: [
-        'Real-time opportunity flagging',
-        'Multi-channel coverage (QSR, Workplace, Leisure, Education, Healthcare)',
-        'Priority scoring and confidence ratings',
-        'Advanced filtering and search capabilities'
+        'AI-generated playbooks for 4 key channels',
+        '8 comprehensive strategic implementation steps',
+        'Success rates and revenue projections',
+        'PDF and PowerPoint export capabilities'
       ],
       icon: <Map color="primary" />,
-      page: '/market-mapping'
+      page: '/partnership-engine'
     },
     {
-      title: 'Agentic AI Assistant',
-      content: 'Your intelligent partner for sales and account management',
-      description: 'Multiple AI agents specialized in different aspects of AFH channel development.',
+      title: 'AI Assistant',
+      content: 'Your intelligent partnership strategist',
+      description: 'Get expert guidance on partnership strategies, playbook optimization, and market opportunities.',
       features: [
-        'Market Analyst: Trend analysis and opportunity identification',
-        'Outreach Generator: Email and proposal creation',
-        'Competitive Intelligence: Market positioning analysis',
-        'Strategy Advisor: Channel expansion guidance'
+        'Context-aware partnership recommendations',
+        'Gaming, concert, theme park, and retail expertise',
+        'Real-time strategy guidance',
+        'PepsiCo brand portfolio optimization'
       ],
       icon: <SmartToy color="primary" />,
-      page: '/agentic-ai'
+      page: '/partnership-engine'
     },
     {
-      title: 'Analytics Dashboard',
-      content: 'Comprehensive insights into your AFH performance',
-      description: 'Track key metrics, visualize trends, and monitor the health of your AFH initiatives.',
+      title: 'Growth Opportunities',
+      content: 'Discover new AFH market opportunities',
+      description: 'Explore partnership opportunities across cinema, concerts, fashion, theme parks, petrol retail, and gaming.',
       features: [
-        'Interactive charts and visualizations',
-        'Real-time performance metrics',
-        'Channel distribution analysis',
-        'Project progress tracking'
+        '6 key opportunity categories',
+        'Revenue potential and confidence ratings',
+        'Market insights and key brands',
+        'Actionable exploration tools'
+      ],
+      icon: <TrendingUp color="primary" />,
+      page: '/growth-opportunities'
+    },
+    {
+      title: 'Success Tracking',
+      content: 'Monitor partnership performance and impact',
+      description: 'Track partnership success metrics, analyze channel performance, and measure your AFH portfolio growth.',
+      features: [
+        'Real-time partnership metrics',
+        'Channel performance analytics',
+        'Portfolio growth tracking',
+        'Success rate monitoring'
       ],
       icon: <Analytics color="primary" />,
-      page: '/dashboard'
-    },
-    {
-      title: 'Expert Network',
-      content: 'Access on-demand AFH expertise and peer consultations',
-      description: 'Connect with industry experts and peers for specialized knowledge and strategic guidance.',
-      features: [
-        'Curated expert database',
-        'Skill-based matching',
-        'Consultation scheduling',
-        'Knowledge sharing platform'
-      ],
-      icon: <People color="primary" />,
-      page: '/expert-network'
+      page: '/success-tracking'
     }
   ];
 
   const quickTips = {
-    '/dashboard': [
-      'Use the Analytics tab to view detailed performance metrics',
-      'Click on any module card to navigate directly to that feature',
-      'The health status shows real-time system connectivity'
+    '/partnership-engine': [
+      'Generate AI-powered playbooks for gaming, concerts, theme parks, and retail',
+      'Use the AI Assistant for strategic partnership guidance',
+      'Export playbooks to PDF or PowerPoint for presentations',
+      'View full playbooks to see all 8 strategic implementation steps'
     ],
-    '/market-mapping': [
-      'Use advanced filters to narrow down opportunities by channel, priority, or confidence',
-      'Export data to CSV for external analysis',
-      'Click on channel buttons for quick filtering'
+    '/growth-opportunities': [
+      'Explore 6 key opportunity categories for AFH partnerships',
+      'Click "Explore Opportunities" to dive deeper into each category',
+      'Review revenue potential and confidence ratings for prioritization',
+      'Use market insights to identify the best partnership targets'
     ],
-    '/agentic-ai': [
-      'Switch between different AI agents for specialized assistance',
-      'Use quick prompts to get started with common tasks',
-      'The AI has access to your platform data for contextual responses'
-    ],
-    '/expert-network': [
-      'Filter experts by skills and experience level',
-      'Use the consultation scheduler for expert meetings',
-      'Rate and review experts after consultations'
-    ],
-    '/playbook-generator': [
-      'Generate custom playbooks for different channels',
-      'Use AI assistance for content creation',
-      'Share playbooks with your team'
+    '/success-tracking': [
+      'Monitor real-time partnership performance metrics',
+      'Analyze channel performance with interactive charts',
+      'Track portfolio growth and success rates',
+      'Use insights to optimize future partnership strategies'
     ]
   };
 
@@ -222,20 +215,20 @@ const OnboardingTour = ({ open, onClose, currentPage }) => {
             <List dense>
               <ListItem>
                 <ListItemText 
-                  primary="Platform Overview" 
-                  secondary="Visit the Dashboard for a complete overview of all features"
+                  primary="Partnership Playbooks" 
+                  secondary="Generate AI-powered strategic partnership playbooks"
                 />
               </ListItem>
               <ListItem>
                 <ListItemText 
                   primary="AI Assistant" 
-                  secondary="Ask the AI assistant for help with specific tasks"
+                  secondary="Get intelligent partnership strategy guidance"
                 />
               </ListItem>
               <ListItem>
                 <ListItemText 
-                  primary="Expert Network" 
-                  secondary="Connect with AFH experts for personalized guidance"
+                  primary="Growth Opportunities" 
+                  secondary="Discover new AFH market opportunities across channels"
                 />
               </ListItem>
             </List>

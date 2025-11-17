@@ -781,7 +781,7 @@ const PartnershipEngine = () => {
                         bgcolor: chat.type === 'user' ? pepsicoBrandColors.primary.navy : pepsicoBrandColors.neutral.lightGray,
                         color: chat.type === 'user' ? 'white' : 'text.primary'
                       }}>
-                        <Typography variant="body2">
+                        <Typography variant={{ xs: 'caption', sm: 'body2' }}>
                           {chat.message}
                         </Typography>
                       </Paper>
@@ -882,63 +882,63 @@ const PartnershipEngine = () => {
             
             <DialogContent sx={{ p: 3 }}>
               <Box sx={{ mb: 3 }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={4}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
                     <Box sx={{ 
                       textAlign: 'center', 
-                      p: 3, 
+                      p: { xs: 2, sm: 3 }, 
                       bgcolor: `${pepsicoBrandColors.secondary.green}20`, 
                       borderRadius: 2, 
                       border: `1px solid ${pepsicoBrandColors.secondary.green}`,
-                      minHeight: '120px',
+                      minHeight: { xs: '100px', sm: '120px' },
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center'
                     }}>
-                      <Typography variant="h3" fontWeight={600} color={pepsicoBrandColors.secondary.green} sx={{ mb: 1 }}>
+                      <Typography variant={{ xs: 'h4', sm: 'h3' }} fontWeight={600} color={pepsicoBrandColors.secondary.green} sx={{ mb: 1 }}>
                         {selectedPlaybook.successRate}%
                       </Typography>
-                      <Typography variant="body2" color={pepsicoBrandColors.secondary.green} fontWeight={500}>
+                      <Typography variant={{ xs: 'caption', sm: 'body2' }} color={pepsicoBrandColors.secondary.green} fontWeight={500}>
                         Success Rate
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={12} sm={4}>
                     <Box sx={{ 
                       textAlign: 'center', 
-                      p: 3, 
+                      p: { xs: 2, sm: 3 }, 
                       bgcolor: `${pepsicoBrandColors.primary.navy}15`, 
                       borderRadius: 2, 
                       border: `1px solid ${pepsicoBrandColors.primary.navy}`,
-                      minHeight: '120px',
+                      minHeight: { xs: '100px', sm: '120px' },
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center'
                     }}>
-                      <Typography variant="h3" fontWeight={600} color={pepsicoBrandColors.primary.navy} sx={{ mb: 1 }}>
+                      <Typography variant={{ xs: 'h4', sm: 'h3' }} fontWeight={600} color={pepsicoBrandColors.primary.navy} sx={{ mb: 1 }}>
                         {selectedPlaybook.averageRevenue}
                       </Typography>
-                      <Typography variant="body2" color={pepsicoBrandColors.primary.navy} fontWeight={500}>
+                      <Typography variant={{ xs: 'caption', sm: 'body2' }} color={pepsicoBrandColors.primary.navy} fontWeight={500}>
                         Revenue Potential
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={12} sm={4}>
                     <Box sx={{ 
                       textAlign: 'center', 
-                      p: 3, 
+                      p: { xs: 2, sm: 3 }, 
                       bgcolor: `${pepsicoBrandColors.secondary.orange}20`, 
                       borderRadius: 2, 
                       border: `1px solid ${pepsicoBrandColors.secondary.orange}`,
-                      minHeight: '120px',
+                      minHeight: { xs: '100px', sm: '120px' },
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center'
                     }}>
-                      <Typography variant="h3" fontWeight={600} color={pepsicoBrandColors.secondary.orange} sx={{ mb: 1 }}>
+                      <Typography variant={{ xs: 'h4', sm: 'h3' }} fontWeight={600} color={pepsicoBrandColors.secondary.orange} sx={{ mb: 1 }}>
                         {selectedPlaybook.duration}
                       </Typography>
-                      <Typography variant="body2" color={pepsicoBrandColors.secondary.orange} fontWeight={500}>
+                      <Typography variant={{ xs: 'caption', sm: 'body2' }} color={pepsicoBrandColors.secondary.orange} fontWeight={500}>
                         Timeline
                       </Typography>
                     </Box>
@@ -985,7 +985,7 @@ const PartnershipEngine = () => {
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography variant="body2" sx={{ mb: 2 }}>
+                      <Typography variant={{ xs: 'caption', sm: 'body2' }} sx={{ mb: 2 }}>
                         {step.description}
                       </Typography>
                       <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
@@ -1020,7 +1020,7 @@ const PartnershipEngine = () => {
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography variant="body2">
+                      <Typography variant={{ xs: 'caption', sm: 'body2' }}>
                         Detailed implementation guidance for {insight.toLowerCase()}.
                       </Typography>
                     </AccordionDetails>
