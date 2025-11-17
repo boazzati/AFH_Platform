@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 
 // Enhanced with real PepsiCo AFH intelligence and market data
@@ -199,12 +200,48 @@ router.post('/generate', async (req, res) => {
 
     console.log(`✅ Playbook generated: "${playbook.title}"`);
     
+    // Try to save to MongoDB if connected
+    let saved = false;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        // Create a simple playbook document for MongoDB
+        const PlaybookModel = mongoose.model('Playbook', new mongoose.Schema({
+          title: String,
+          category: String,
+          region: String,
+          description: String,
+          successRate: Number,
+          averageRevenue: String,
+          timeToClose: String,
+          data: mongoose.Schema.Types.Mixed,
+          createdAt: { type: Date, default: Date.now }
+        }));
+        
+        const savedPlaybook = new PlaybookModel({
+          title: playbook.title,
+          category: playbook.category,
+          region: playbook.region,
+          description: playbook.description,
+          successRate: playbook.successRate,
+          averageRevenue: playbook.averageRevenue,
+          timeToClose: playbook.timeToClose,
+          data: playbook
+        });
+        
+        await savedPlaybook.save();
+        saved = true;
+        console.log('✅ Playbook saved to MongoDB');
+      } catch (saveError) {
+        console.log('⚠️ MongoDB save failed:', saveError.message);
+      }
+    }
+    
     res.json({
-      playbook: playbook,
+      data: playbook,
       message: 'Playbook generated successfully',
       isNew: true,
-      saved: false,
-      note: 'Enhanced AI integration coming soon'
+      saved: saved,
+      note: saved ? 'Playbook saved to database' : 'Playbook generated (database save failed)'
     });
     
   } catch (error) {

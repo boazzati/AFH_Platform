@@ -150,14 +150,19 @@ const PartnershipEngine = () => {
         const playbookData = await response.json();
         const newPlaybook = {
           id: `generated-${Date.now()}`,
-          title: playbookData.title || `Strategic Partnership Playbook: ${title}`,
-          category: type.charAt(0).toUpperCase() + type.slice(1),
-          description: playbookData.overview || `AI-generated partnership strategy for ${title}`,
-          steps: playbookData.steps?.length || 8,
-          duration: playbookData.timeline || '3-5 months',
-          successRate: playbookData.successRate || 75,
-          brands: playbookData.brands || ['Pepsi', 'Doritos', 'Lay\'s'],
-          keyInsights: playbookData.keyInsights || [`Strategic partnership opportunity for ${title}`],
+          title: playbookData.data?.title || `Strategic Partnership Playbook: ${title}`,
+          category: playbookData.data?.partnershipModel || type.charAt(0).toUpperCase() + type.slice(1),
+          description: playbookData.data?.overview || `AI-generated partnership strategy for ${title}`,
+          steps: playbookData.data?.strategicSteps?.length || 8,
+          duration: playbookData.data?.timeToClose || '3-5 months',
+          successRate: playbookData.data?.successRate || 75,
+          brands: playbookData.data?.keyBrands || ['Pepsi', 'Doritos', 'Lay\'s'],
+          keyInsights: playbookData.data?.industryInsights?.opportunities || [`Strategic partnership opportunity for ${title}`],
+          targetAudience: playbookData.data?.targetAudience || 'Target audience analysis',
+          revenueModel: playbookData.data?.revenueModel || 'Revenue sharing model',
+          averageRevenue: playbookData.data?.averageRevenue || '€2-8M',
+          strategicSteps: playbookData.data?.strategicSteps || [],
+          industryInsights: playbookData.data?.industryInsights || {},
           fullData: playbookData,
           isGenerated: true
         };
@@ -176,10 +181,146 @@ const PartnershipEngine = () => {
     setModalOpen(true);
   };
 
-  const handleExportPlaybook = (format) => {
-    if (selectedPlaybook) {
-      console.log(`Exporting ${selectedPlaybook.title} as ${format}`);
-      // Implementation for PDF/PPT export would go here
+  const handleExportPlaybook = async (format) => {
+    if (!selectedPlaybook) return;
+    
+    try {
+      // Create export content
+      const exportContent = {
+        title: selectedPlaybook.title,
+        category: selectedPlaybook.category,
+        description: selectedPlaybook.description,
+        steps: selectedPlaybook.steps,
+        duration: selectedPlaybook.duration,
+        successRate: selectedPlaybook.successRate,
+        brands: selectedPlaybook.brands,
+        keyInsights: selectedPlaybook.keyInsights,
+        strategicSteps: selectedPlaybook.strategicSteps,
+        targetAudience: selectedPlaybook.targetAudience,
+        averageRevenue: selectedPlaybook.averageRevenue,
+        fullData: selectedPlaybook.fullData
+      };
+      
+      if (format === 'pdf') {
+        // Generate PDF
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(20);
+        doc.text(selectedPlaybook.title, 20, 30);
+        
+        // Add category
+        doc.setFontSize(14);
+        doc.text(`Category: ${selectedPlaybook.category}`, 20, 50);
+        
+        // Add description
+        doc.setFontSize(12);
+        const splitDescription = doc.splitTextToSize(selectedPlaybook.description, 170);
+        doc.text(splitDescription, 20, 70);
+        
+        // Add metrics
+        doc.text(`Steps: ${selectedPlaybook.steps} | Duration: ${selectedPlaybook.duration} | Success Rate: ${selectedPlaybook.successRate}%`, 20, 100);
+        doc.text(`Revenue Potential: ${selectedPlaybook.averageRevenue}`, 20, 110);
+        
+        // Add target audience
+        doc.text(`Target Audience: ${selectedPlaybook.targetAudience}`, 20, 125);
+        
+        // Add brands
+        doc.text(`Key Brands: ${selectedPlaybook.brands.join(', ')}`, 20, 140);
+        
+        // Add strategic steps if available
+        if (selectedPlaybook.strategicSteps && selectedPlaybook.strategicSteps.length > 0) {
+          doc.text('Strategic Implementation Steps:', 20, 160);
+          let yPosition = 175;
+          selectedPlaybook.strategicSteps.forEach((step, index) => {
+            if (yPosition > 250) {
+              doc.addPage();
+              yPosition = 30;
+            }
+            doc.text(`${step.stepNumber}. ${step.title} (${step.duration})`, 20, yPosition);
+            yPosition += 10;
+            const splitDesc = doc.splitTextToSize(step.description, 170);
+            doc.text(splitDesc, 25, yPosition);
+            yPosition += splitDesc.length * 5 + 10;
+          });
+        }
+        
+        // Download PDF
+        doc.save(`${selectedPlaybook.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_playbook.pdf`);
+        
+      } else if (format === 'ppt') {
+        // Generate PPT using PptxGenJS
+        const { default: PptxGenJS } = await import('pptxgenjs');
+        const pptx = new PptxGenJS();
+        
+        // Title slide
+        const slide1 = pptx.addSlide();
+        slide1.addText(selectedPlaybook.title, {
+          x: 1, y: 1, w: 8, h: 1.5,
+          fontSize: 24, bold: true, color: '004B87'
+        });
+        slide1.addText(selectedPlaybook.category, {
+          x: 1, y: 2.5, w: 8, h: 0.5,
+          fontSize: 16, color: '666666'
+        });
+        slide1.addText(selectedPlaybook.description, {
+          x: 1, y: 3.5, w: 8, h: 2,
+          fontSize: 14
+        });
+        
+        // Metrics slide
+        const slide2 = pptx.addSlide();
+        slide2.addText('Partnership Metrics', {
+          x: 1, y: 0.5, w: 8, h: 1,
+          fontSize: 20, bold: true, color: '004B87'
+        });
+        slide2.addText(`Steps: ${selectedPlaybook.steps}`, { x: 1, y: 2, w: 4, h: 0.5, fontSize: 16 });
+        slide2.addText(`Duration: ${selectedPlaybook.duration}`, { x: 1, y: 2.7, w: 4, h: 0.5, fontSize: 16 });
+        slide2.addText(`Success Rate: ${selectedPlaybook.successRate}%`, { x: 1, y: 3.4, w: 4, h: 0.5, fontSize: 16 });
+        slide2.addText(`Revenue: ${selectedPlaybook.averageRevenue}`, { x: 1, y: 4.1, w: 4, h: 0.5, fontSize: 16 });
+        slide2.addText(`Key Brands: ${selectedPlaybook.brands.join(', ')}`, { x: 1, y: 4.8, w: 8, h: 0.5, fontSize: 16 });
+        
+        // Strategic steps slides
+        if (selectedPlaybook.strategicSteps && selectedPlaybook.strategicSteps.length > 0) {
+          selectedPlaybook.strategicSteps.forEach((step, index) => {
+            const stepSlide = pptx.addSlide();
+            stepSlide.addText(`Step ${step.stepNumber}: ${step.title}`, {
+              x: 1, y: 0.5, w: 8, h: 1,
+              fontSize: 18, bold: true, color: '004B87'
+            });
+            stepSlide.addText(`Duration: ${step.duration}`, {
+              x: 1, y: 1.5, w: 8, h: 0.5,
+              fontSize: 14, color: '666666'
+            });
+            stepSlide.addText(step.description, {
+              x: 1, y: 2.2, w: 8, h: 1.5,
+              fontSize: 12
+            });
+            
+            // Add key actions
+            if (step.keyActions && step.keyActions.length > 0) {
+              stepSlide.addText('Key Actions:', {
+                x: 1, y: 4, w: 8, h: 0.5,
+                fontSize: 14, bold: true
+              });
+              step.keyActions.slice(0, 3).forEach((action, actionIndex) => {
+                stepSlide.addText(`• ${action}`, {
+                  x: 1.2, y: 4.5 + (actionIndex * 0.4), w: 7.5, h: 0.4,
+                  fontSize: 11
+                });
+              });
+            }
+          });
+        }
+        
+        // Download PPT
+        pptx.writeFile({ fileName: `${selectedPlaybook.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_playbook.pptx` });
+      }
+      
+    } catch (error) {
+      console.error(`Error exporting ${format}:`, error);
+      alert(`Error exporting ${format.toUpperCase()}. Please try again.`);
     }
   };
 
@@ -514,7 +655,7 @@ const PartnershipEngine = () => {
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
                       <Typography variant="h4" fontWeight={600} color="primary.dark">
-                        €2-8M
+                        {selectedPlaybook.averageRevenue}
                       </Typography>
                       <Typography variant="caption" color="primary.dark">
                         Revenue Potential
@@ -535,7 +676,7 @@ const PartnershipEngine = () => {
               </Box>
 
               <Typography variant="body1" sx={{ mb: 3 }}>
-                <strong>Target Audience:</strong> {selectedPlaybook.fullData?.targetAudience || `${selectedPlaybook.title} audience with high engagement potential`}
+                <strong>Target Audience:</strong> {selectedPlaybook.targetAudience}
               </Typography>
 
               <Box sx={{ mb: 3 }}>
@@ -553,18 +694,41 @@ const PartnershipEngine = () => {
                 Strategic Implementation Steps:
               </Typography>
               
-              {selectedPlaybook.fullData?.steps ? (
-                selectedPlaybook.fullData.steps.map((step, index) => (
+              {selectedPlaybook.strategicSteps && selectedPlaybook.strategicSteps.length > 0 ? (
+                selectedPlaybook.strategicSteps.map((step, index) => (
                   <Accordion key={index}>
                     <AccordionSummary expandIcon={<ExpandMore />}>
                       <Typography fontWeight={600}>
-                        Step {index + 1}: {step.title}
+                        Step {step.stepNumber}: {step.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ ml: 2, color: 'text.secondary' }}>
+                        ({step.duration})
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography variant="body2">
+                      <Typography variant="body2" sx={{ mb: 2 }}>
                         {step.description}
                       </Typography>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        Key Actions:
+                      </Typography>
+                      <Box component="ul" sx={{ pl: 2, mb: 2 }}>
+                        {step.keyActions.map((action, actionIndex) => (
+                          <Typography component="li" variant="body2" key={actionIndex} sx={{ mb: 0.5 }}>
+                            {action}
+                          </Typography>
+                        ))}
+                      </Box>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        Success Metrics:
+                      </Typography>
+                      <Box component="ul" sx={{ pl: 2 }}>
+                        {step.successMetrics.map((metric, metricIndex) => (
+                          <Typography component="li" variant="body2" key={metricIndex} sx={{ mb: 0.5 }}>
+                            {metric}
+                          </Typography>
+                        ))}
+                      </Box>
                     </AccordionDetails>
                   </Accordion>
                 ))
@@ -590,14 +754,14 @@ const PartnershipEngine = () => {
               <Button
                 variant="outlined"
                 startIcon={<PictureAsPdf />}
-                onClick={() => handleExportPlaybook('PDF')}
+                onClick={() => handleExportPlaybook('pdf')}
               >
                 Export PDF
               </Button>
               <Button
                 variant="outlined"
                 startIcon={<Slideshow />}
-                onClick={() => handleExportPlaybook('PPT')}
+                onClick={() => handleExportPlaybook('ppt')}
               >
                 Export PPT
               </Button>
