@@ -131,6 +131,85 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
+// New AI Chat endpoint for Partnership Assistant
+app.post('/api/chat', async (req, res) => {
+  try {
+    console.log('🤖 Partnership AI chat request received');
+    const { message, context = [] } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Enhanced system prompt for partnership context
+    const systemPrompt = `You are the PepsiCo Partnership AI, an expert assistant specializing in Away From Home (AFH) partnership strategies. You help create activation strategies, generate outreach campaigns, and optimize partnership opportunities.
+
+Key areas of expertise:
+- Gaming & Esports partnerships (T1 Esports, competitive gaming)
+- Concert & Festival partnerships (Tomorrowland, music festivals)
+- Theme Park partnerships (Europa-Park, immersive experiences)
+- Petrol Retail partnerships (Shell, travel convenience)
+- Cinema & Entertainment partnerships
+- Fashion & Retail partnerships
+
+Always provide specific, actionable insights with relevant metrics, timelines, and PepsiCo brand recommendations (Pepsi, Doritos, Lay's, Gatorade, Mountain Dew, Cheetos, etc.).`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...context,
+        { role: 'user', content: message }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7
+    });
+
+    res.json({
+      response: completion.choices[0].message.content,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Partnership AI chat error:', error);
+    
+    // Fallback response if OpenAI fails
+    const fallbackResponses = {
+      gaming: "🎮 **Gaming & Esports Strategy**: For gaming partnerships, I recommend focusing on T1 Esports-style collaborations. Key brands: Mountain Dew, Doritos, Pepsi Max. Timeline: 2-4 months. Success rate: ~78%. Consider tournament sponsorships and gaming cafe activations.",
+      concert: "🎵 **Concert & Festival Strategy**: Tomorrowland-style immersive experiences work best. Key brands: Pepsi, Gatorade, Aquafina. Timeline: 3-5 months (seasonal planning). Success rate: ~85%. Focus on sustainability and VIP experiences.",
+      theme: "🎢 **Theme Park Strategy**: Europa-Park Doritos Loaded model is proven. Key brands: Doritos, Cheetos, Pepsi. Timeline: 4-6 months. Success rate: ~94%. Emphasize family-friendly immersive food experiences.",
+      petrol: "⛽ **Petrol Retail Strategy**: Shell Premium Stations approach works well. Key brands: Pepsi, Lay's, Gatorade. Timeline: 4-6 months. Success rate: ~75%. Focus on travel convenience and premium experiences."
+    };
+    
+    let fallbackResponse = "🤖 I'm here to help with PepsiCo AFH partnership strategies! I can assist with gaming, concert, theme park, and retail partnerships. What specific opportunity would you like to explore?";
+    
+    const messageLower = message.toLowerCase();
+    if (messageLower.includes('gaming') || messageLower.includes('esports')) {
+      fallbackResponse = fallbackResponses.gaming;
+    } else if (messageLower.includes('concert') || messageLower.includes('festival') || messageLower.includes('music')) {
+      fallbackResponse = fallbackResponses.concert;
+    } else if (messageLower.includes('theme') || messageLower.includes('park')) {
+      fallbackResponse = fallbackResponses.theme;
+    } else if (messageLower.includes('petrol') || messageLower.includes('retail') || messageLower.includes('convenience')) {
+      fallbackResponse = fallbackResponses.petrol;
+    }
+    
+    res.json({
+      response: fallbackResponse,
+      timestamp: new Date().toISOString(),
+      fallback: true
+    });
+  }
+});
+
+// OPTIONS handler for CORS preflight
+app.options('/api/chat', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
 // Market Signals endpoints
 app.get('/api/market-signals', (req, res) => {
   console.log('📡 Market signals requested');
