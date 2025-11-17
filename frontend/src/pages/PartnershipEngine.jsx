@@ -683,11 +683,11 @@ const PartnershipEngine = () => {
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: `${pepsicoBrandColors.accent.orange}20`, borderRadius: 1, border: `1px solid ${pepsicoBrandColors.accent.orange}` }}>
-                      <Typography variant="h4" fontWeight={600} color={pepsicoBrandColors.accent.orange}>
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: `${pepsicoBrandColors.secondary.orange}20`, borderRadius: 1, border: `1px solid ${pepsicoBrandColors.secondary.orange}` }}>
+                      <Typography variant="h4" fontWeight={600} color={pepsicoBrandColors.secondary.orange}>
                         {selectedPlaybook.duration}
                       </Typography>
-                      <Typography variant="caption" color={pepsicoBrandColors.accent.orange}>
+                      <Typography variant="caption" color={pepsicoBrandColors.secondary.orange}>
                         Timeline
                       </Typography>
                     </Box>
