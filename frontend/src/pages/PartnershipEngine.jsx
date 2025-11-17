@@ -65,7 +65,11 @@ const PartnershipEngine = () => {
     }
   ]);
   const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
-  const [generatedPlaybooks, setGeneratedPlaybooks] = useState([]);
+  const [generatedPlaybooks, setGeneratedPlaybooks] = useState(() => {
+    // Load from localStorage on component mount
+    const saved = localStorage.getItem('pepsico-generated-playbooks');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [showGenerationSuccess, setShowGenerationSuccess] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState(null);
@@ -77,40 +81,8 @@ const PartnershipEngine = () => {
     "Analyze theme park collaboration opportunities"
   ];
 
-  const staticPlaybooks = [
-    {
-      id: 'restaurant-services',
-      title: 'Local Restaurant Value Services',
-      category: 'Foodservice',
-      description: 'AI-powered value-added services for mid-size restaurant chains (50-150 outlets) including SRP tools and dynamic pricing',
-      steps: 8,
-      duration: '4-6 weeks',
-      successRate: 89,
-      brands: ['Pepsi', 'Lay\'s', 'Gatorade'],
-      keyInsights: [
-        'Most profitable AFH channel with highest margins',
-        'Focus on operational efficiency and cost reduction',
-        'Digital integration opportunities with POS systems'
-      ],
-      isStatic: true
-    },
-    {
-      id: 'immersive-experience',
-      title: 'Immersive Food Experience',
-      category: 'Theme Parks',
-      description: 'Doritos Loaded-style culinary activations with full story-world integration and co-creation partnerships',
-      steps: 12,
-      duration: '8-12 months',
-      successRate: 94,
-      brands: ['Doritos', 'Cheetos', 'Flamin\' Hot'],
-      keyInsights: [
-        'Highest brand building impact and consumer engagement',
-        'Premium pricing opportunities with experiential value',
-        'Social media amplification through immersive storytelling'
-      ],
-      isStatic: true
-    }
-  ];
+  // Static playbooks removed - only show AI-generated dynamic playbooks
+  const staticPlaybooks = [];
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -152,7 +124,7 @@ const PartnershipEngine = () => {
       if (response.ok) {
         const playbookData = await response.json();
         const newPlaybook = {
-          id: `generated-${Date.now()}`,
+          id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           title: playbookData.data?.title || `Strategic Partnership Playbook: ${title}`,
           category: playbookData.data?.partnershipModel || type.charAt(0).toUpperCase() + type.slice(1),
           description: playbookData.data?.overview || `AI-generated partnership strategy for ${title}`,
@@ -170,7 +142,9 @@ const PartnershipEngine = () => {
           isGenerated: true
         };
         
-        setGeneratedPlaybooks(prev => [newPlaybook, ...prev]);
+        const updatedPlaybooks = [newPlaybook, ...generatedPlaybooks];
+        setGeneratedPlaybooks(updatedPlaybooks);
+        localStorage.setItem('pepsico-generated-playbooks', JSON.stringify(updatedPlaybooks));
       }
     } catch (error) {
       console.error('Error generating playbook:', error);
@@ -511,7 +485,20 @@ const PartnershipEngine = () => {
     }
   };
 
-  const allPlaybooks = [...generatedPlaybooks, ...staticPlaybooks];
+  // Only show AI-generated playbooks for a cleaner, more dynamic experience
+  const allPlaybooks = generatedPlaybooks;
+
+  // Development helper - add a way to clear stored playbooks (can be removed in production)
+  const clearStoredPlaybooks = () => {
+    localStorage.removeItem('pepsico-generated-playbooks');
+    setGeneratedPlaybooks([]);
+    console.log('Cleared all stored playbooks');
+  };
+  
+  // Expose to window for development testing (can be removed in production)
+  if (typeof window !== 'undefined') {
+    window.clearPlaybooks = clearStoredPlaybooks;
+  }
 
   return (
     <Box sx={{ p: 3 }}>
