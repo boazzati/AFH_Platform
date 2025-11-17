@@ -452,13 +452,13 @@ const PartnershipEngine = () => {
             },
           }}
         >
-          <Tab label="AI Assistant" />
           <Tab label="Partnership Playbooks" />
+          <Tab label="AI Assistant" />
           <Tab label="Outreach Campaigns" />
         </Tabs>
       </Box>
 
-      {/* AI Assistant Tab */}
+      {/* Partnership Playbooks Tab */}
       {selectedTab === 0 && (
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
@@ -546,7 +546,7 @@ const PartnershipEngine = () => {
         </Grid>
       )}
 
-      {/* Partnership Playbooks Tab */}
+      {/* AI Assistant Tab */}
       {selectedTab === 1 && (
         <Box>
           {/* Quick Generate Section */}
@@ -556,7 +556,7 @@ const PartnershipEngine = () => {
                 🚀 Generate New Partnership Playbook
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6} md={3}>
                   <Button
                     fullWidth
                     variant="outlined"
@@ -571,7 +571,7 @@ const PartnershipEngine = () => {
                     🎵 Concert Partnership
                   </Button>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6} md={3}>
                   <Button
                     fullWidth
                     variant="outlined"
@@ -586,11 +586,11 @@ const PartnershipEngine = () => {
                     🎮 Gaming Partnership
                   </Button>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6} md={3}>
                   <Button
                     fullWidth
                     variant="outlined"
-                    onClick={() => generateNewPlaybook('foodservice', 'Local Restaurant Value Services', 'Global')}
+                    onClick={() => generateNewPlaybook('petrol_retail', 'Shell Highway Services - Premium Convenience', 'EMEA')}
                     disabled={isGeneratingPlaybook}
                     sx={{ 
                       borderColor: pepsicoBrandColors.primary.navy,
@@ -598,7 +598,22 @@ const PartnershipEngine = () => {
                       '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
                     }}
                   >
-                    🏪 Retail Partnership
+                    ⛽ Petrol Retail
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('theme_park', 'Europa-Park Doritos Loaded Experience', 'Europe')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎢 Theme Park
                   </Button>
                 </Grid>
               </Grid>
@@ -888,7 +903,7 @@ const PartnershipEngine = () => {
           )}
         </DialogContent>
         
-        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
+        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider', justifyContent: 'space-between' }}>
           <Button 
             onClick={handleClosePlaybookModal}
             variant="outlined"
@@ -899,14 +914,42 @@ const PartnershipEngine = () => {
           >
             Close
           </Button>
-          <Button 
-            variant="contained"
-            sx={{ 
-              background: `linear-gradient(135deg, ${pepsicoBrandColors.primary.navy} 0%, ${pepsicoBrandColors.primary.blue} 100%)`,
-            }}
-          >
-            Export Playbook
-          </Button>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              variant="outlined"
+              onClick={() => {
+                // Export as PDF functionality
+                console.log('Exporting as PDF...');
+                // Add PDF export logic here
+              }}
+              sx={{ 
+                borderColor: pepsicoBrandColors.secondary.red,
+                color: pepsicoBrandColors.secondary.red,
+                '&:hover': {
+                  bgcolor: `${pepsicoBrandColors.secondary.red}10`
+                }
+              }}
+            >
+              📄 Export PDF
+            </Button>
+            <Button 
+              variant="contained"
+              onClick={() => {
+                // Export as PPT functionality
+                console.log('Exporting as PPT...');
+                // Add PPT export logic here
+              }}
+              sx={{ 
+                background: `linear-gradient(135deg, ${pepsicoBrandColors.secondary.orange} 0%, ${pepsicoBrandColors.secondary.orange}CC 100%)`,
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${pepsicoBrandColors.secondary.orange}DD 0%, ${pepsicoBrandColors.secondary.orange}AA 100())`,
+                }
+              }}
+            >
+              📊 Export PPT
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
     </Box>

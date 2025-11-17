@@ -211,19 +211,68 @@ const PepsiCoDashboard = () => {
             {heroMetric.description}
           </Typography>
 
-          {/* Real-time growth chart */}
-          <Box sx={{ height: 100, mt: 3 }}>
+          {/* Enhanced real-time growth chart */}
+          <Box sx={{ height: 120, mt: 3, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growthData}>
+                <defs>
+                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="rgba(255,255,255,0.4)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="rgba(255,255,255,0.1)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                />
+                <YAxis hide />
+                <RechartsTooltip 
+                  contentStyle={{
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+                  }}
+                  formatter={(value) => [formatNumber(value), 'Experiences']}
+                />
                 <Area 
                   type="monotone" 
                   dataKey="smiles" 
-                  stroke="rgba(255,255,255,0.8)"
-                  fill="rgba(255,255,255,0.2)"
-                  strokeWidth={2}
+                  stroke="rgba(255,255,255,0.9)"
+                  fill="url(#colorGradient)"
+                  strokeWidth={3}
+                  dot={{ fill: 'white', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: 'white', strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
+            
+            {/* Live indicator */}
+            <Box sx={{ 
+              position: 'absolute', 
+              top: 8, 
+              right: 8, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              bgcolor: 'rgba(255,255,255,0.2)',
+              px: 2,
+              py: 0.5,
+              borderRadius: 2
+            }}>
+              <Box sx={{ 
+                width: 8, 
+                height: 8, 
+                bgcolor: '#4ade80', 
+                borderRadius: '50%',
+                animation: 'pulse 2s infinite'
+              }} />
+              <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
+                LIVE
+              </Typography>
+            </Box>
           </Box>
         </CardContent>
       </Card>
