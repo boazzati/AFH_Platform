@@ -488,12 +488,14 @@ const SuccessTracking = () => {
                         cy="50%"
                         outerRadius={80}
                         dataKey="value"
+                        label={({ channel, value }) => `${channel}: ${value}%`}
+                        labelLine={false}
                       >
                         {channelPerformanceData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value, name) => [`${value}%`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>

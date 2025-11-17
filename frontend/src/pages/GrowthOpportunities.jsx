@@ -261,20 +261,30 @@ const GrowthOpportunities = () => {
     }, 0);
   };
 
+  const handleExploreOpportunities = (channel) => {
+    // Navigate to detailed opportunity analysis
+    console.log(`Exploring opportunities for ${channel.title}`);
+    // In a real app, this would navigate to a detailed view or open a modal
+    alert(`Exploring ${channel.title} opportunities in ${selectedRegion}. This would open detailed analysis in a production app.`);
+  };
+
   const ChannelCard = ({ channel }) => {
     const data = getChannelData(channel);
     
     return (
       <Card sx={{ 
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         cursor: 'pointer',
         transition: 'all 0.3s ease-in-out',
+        minHeight: '500px',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 12px 40px rgba(0, 51, 102, 0.15)',
         }
       }}>
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar sx={{ 
               bgcolor: `${channel.color}20`,
@@ -389,20 +399,22 @@ const GrowthOpportunities = () => {
             ))}
           </Box>
 
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{ 
-              mt: 2,
-              background: `linear-gradient(135deg, ${channel.color} 0%, ${channel.color}CC 100%)`,
-              '&:hover': {
-                background: `linear-gradient(135deg, ${channel.color}DD 0%, ${channel.color}AA 100%)`,
-              }
-            }}
-            startIcon={<Launch />}
-          >
-            Explore Opportunities
-          </Button>
+          <Box sx={{ mt: 'auto', pt: 2 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => handleExploreOpportunities(channel)}
+              sx={{ 
+                background: `linear-gradient(135deg, ${channel.color} 0%, ${channel.color}CC 100%)`,
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${channel.color}DD 0%, ${channel.color}AA 100%)`,
+                }
+              }}
+              startIcon={<Launch />}
+            >
+              Explore Opportunities
+            </Button>
+          </Box>
         </CardContent>
       </Card>
     );
