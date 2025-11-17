@@ -64,8 +64,8 @@ function AppContent() {
         component="main" 
         sx={{ 
           flexGrow: 1, 
-          p: { xs: 2, sm: 3, md: 4 },
-          ml: { xs: 0, md: '300px' }, // Account for sidebar on desktop with proper spacing
+          p: { xs: 2, sm: 2, md: 3 },
+          ml: { xs: 0, md: '240px' }, // Account for sidebar on desktop with optimized spacing
           mt: { xs: '60px', md: 0 }, // Account for mobile menu button
           minHeight: '100vh'
         }}

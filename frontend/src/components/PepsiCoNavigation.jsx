@@ -25,7 +25,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { pepsicoBrandColors } from '../theme/pepsico-theme';
 
-const drawerWidth = 300;
+const drawerWidth = 240;
 
 // Simplified 3-section navigation for PepsiCo demo
 const menuItems = [
