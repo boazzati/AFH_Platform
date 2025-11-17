@@ -156,7 +156,7 @@ const PartnershipEngine = () => {
           title: playbookData.data?.title || `Strategic Partnership Playbook: ${title}`,
           category: playbookData.data?.partnershipModel || type.charAt(0).toUpperCase() + type.slice(1),
           description: playbookData.data?.overview || `AI-generated partnership strategy for ${title}`,
-          steps: playbookData.data?.strategicSteps?.length || 8,
+          steps: playbookData.data?.steps?.length || 8,
           duration: playbookData.data?.timeToClose || '3-5 months',
           successRate: playbookData.data?.successRate || 75,
           brands: playbookData.data?.keyBrands || ['Pepsi', 'Doritos', 'Lay\'s'],
@@ -164,7 +164,7 @@ const PartnershipEngine = () => {
           targetAudience: playbookData.data?.targetAudience || 'Target audience analysis',
           revenueModel: playbookData.data?.revenueModel || 'Revenue sharing model',
           averageRevenue: playbookData.data?.averageRevenue || '€2-8M',
-          strategicSteps: playbookData.data?.strategicSteps || [],
+          strategicSteps: playbookData.data?.steps || [],
           industryInsights: playbookData.data?.industryInsights || {},
           fullData: playbookData,
           isGenerated: true
