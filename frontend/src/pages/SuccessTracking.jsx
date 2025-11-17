@@ -48,10 +48,11 @@ const SuccessTracking = () => {
   ];
 
   const channelPerformanceData = [
-    { channel: 'C-Stores', value: 35, color: pepsicoBrandColors.secondary.orange },
-    { channel: 'Foodservice', value: 28, color: pepsicoBrandColors.primary.blue },
-    { channel: 'Education', value: 20, color: pepsicoBrandColors.secondary.green },
-    { channel: 'Workplace', value: 17, color: pepsicoBrandColors.secondary.red }
+    { channel: 'Theme Parks', value: 35, color: pepsicoBrandColors.secondary.orange },
+    { channel: 'Concerts', value: 28, color: pepsicoBrandColors.primary.blue },
+    { channel: 'Gaming', value: 20, color: pepsicoBrandColors.secondary.green },
+    { channel: 'Cinema', value: 12, color: pepsicoBrandColors.primary.red },
+    { channel: 'Petrol Retail', value: 5, color: pepsicoBrandColors.primary.navy }
   ];
 
   const brandPerformanceData = [

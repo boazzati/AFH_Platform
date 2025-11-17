@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -9,107 +9,160 @@ import {
   Tab,
   Tabs,
   Avatar,
-  Chip,
   TextField,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider,
-  LinearProgress,
   Paper,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  LinearProgress
 } from '@mui/material';
 import {
   SmartToy,
   Send,
-  PlayArrow,
-  Email,
-  Phone,
-  LinkedIn,
-  Business,
   TrendingUp,
-  CheckCircle,
-  Schedule,
-  Person,
+  Business,
+  School,
   Close,
   ExpandMore,
-  AccessTime,
-  TrendingUp as TrendingUpIcon,
-  AttachMoney
+  GetApp,
+  PictureAsPdf,
+  Slideshow
 } from '@mui/icons-material';
-import { pepsicoBrandColors } from '../theme/pepsico-theme';
 
-// PepsiCo Partnership Engine - AI Assistant + Playbooks + Outreach
+const pepsicoBrandColors = {
+  primary: {
+    navy: '#004B87',
+    red: '#E32017',
+    blue: '#0066CC'
+  },
+  secondary: {
+    orange: '#FF6B35',
+    yellow: '#FFD100',
+    green: '#00A651'
+  },
+  neutral: {
+    darkGray: '#2C2C2C',
+    mediumGray: '#666666',
+    lightGray: '#F5F5F5',
+    white: '#FFFFFF'
+  }
+};
+
 const PartnershipEngine = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([
     {
-      type: 'assistant',
-      message: 'Hello! I\'m your PepsiCo Partnership AI. I can help you create activation strategies, generate outreach campaigns, and optimize partnership opportunities. What would you like to work on today?'
+      type: 'ai',
+      message: "Hello! I'm your PepsiCo Partnership AI. I can help you create activation strategies, generate outreach campaigns, and optimize partnership opportunities. What would you like to work on today?"
     }
   ]);
-
-  // State for dynamic playbooks
-  const [dynamicPlaybooks, setDynamicPlaybooks] = useState([]);
   const [isGeneratingPlaybook, setIsGeneratingPlaybook] = useState(false);
-  
-  // State for playbook modal
+  const [generatedPlaybooks, setGeneratedPlaybooks] = useState([]);
   const [selectedPlaybook, setSelectedPlaybook] = useState(null);
-  const [showPlaybookModal, setShowPlaybookModal] = useState(false);
-  
-  // Handle viewing full playbook
-  const handleViewPlaybook = (playbook) => {
-    setSelectedPlaybook(playbook);
-    setShowPlaybookModal(true);
-  };
-  
-  const handleClosePlaybookModal = () => {
-    setShowPlaybookModal(false);
-    setSelectedPlaybook(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const chatSuggestions = [
+    "Create a concert festival partnership playbook",
+    "Generate gaming esports partnership strategy", 
+    "Analyze theme park collaboration opportunities"
+  ];
+
+  const staticPlaybooks = [
+    {
+      id: 'restaurant-services',
+      title: 'Local Restaurant Value Services',
+      category: 'Foodservice',
+      description: 'AI-powered value-added services for mid-size restaurant chains (50-150 outlets) including SRP tools and dynamic pricing',
+      steps: 8,
+      duration: '4-6 weeks',
+      successRate: 89,
+      brands: ['Pepsi', 'Lay\'s', 'Gatorade'],
+      keyInsights: [
+        'Most profitable AFH channel with highest margins',
+        'Focus on operational efficiency and cost reduction',
+        'Digital integration opportunities with POS systems'
+      ],
+      isStatic: true
+    },
+    {
+      id: 'immersive-experience',
+      title: 'Immersive Food Experience',
+      category: 'Theme Parks',
+      description: 'Doritos Loaded-style culinary activations with full story-world integration and co-creation partnerships',
+      steps: 12,
+      duration: '8-12 months',
+      successRate: 94,
+      brands: ['Doritos', 'Cheetos', 'Flamin\' Hot'],
+      keyInsights: [
+        'Highest brand building impact and consumer engagement',
+        'Premium pricing opportunities with experiential value',
+        'Social media amplification through immersive storytelling'
+      ],
+      isStatic: true
+    }
+  ];
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
   };
 
-  // Generate a new playbook
-  const generateNewPlaybook = async (industry, target, region = 'Global') => {
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim()) return;
+
+    const userMessage = chatMessage;
+    setChatMessage('');
+    
+    setChatHistory(prev => [...prev, { type: 'user', message: userMessage }]);
+    
+    // Simulate AI response
+    setTimeout(() => {
+      setChatHistory(prev => [...prev, { 
+        type: 'ai', 
+        message: `I'll help you with that! Based on PepsiCo's AFH strategy and current market trends, here are my recommendations for "${userMessage}"...` 
+      }]);
+    }, 1000);
+  };
+
+  const generateNewPlaybook = async (type, title, region) => {
     setIsGeneratingPlaybook(true);
+    
     try {
       const response = await fetch('https://afhplatform-production.up.railway.app/api/playbooks/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ industry, target, region })
+        body: JSON.stringify({
+          industry: type,
+          partnerName: title,
+          region: region
+        }),
       });
-      
-      const data = await response.json();
-      
-      if (data.playbook) {
+
+      if (response.ok) {
+        const playbookData = await response.json();
         const newPlaybook = {
-          id: Date.now(),
-          title: data.playbook.title,
-          category: data.playbook.industryInsights?.demographics || industry,
-          description: data.playbook.steps[0]?.description || 'AI-generated partnership strategy',
-          steps: data.playbook.steps.length,
-          duration: data.playbook.timeToClose,
-          successRate: `${data.playbook.successRate}%`,
-          brands: data.playbook.keyBrands || ['PepsiCo Products'],
-          isGenerated: true,
-          fullPlaybook: data.playbook
+          id: `generated-${Date.now()}`,
+          title: playbookData.title || `Strategic Partnership Playbook: ${title}`,
+          category: type.charAt(0).toUpperCase() + type.slice(1),
+          description: playbookData.overview || `AI-generated partnership strategy for ${title}`,
+          steps: playbookData.steps?.length || 8,
+          duration: playbookData.timeline || '3-5 months',
+          successRate: playbookData.successRate || 75,
+          brands: playbookData.brands || ['Pepsi', 'Doritos', 'Lay\'s'],
+          keyInsights: playbookData.keyInsights || [`Strategic partnership opportunity for ${title}`],
+          fullData: playbookData,
+          isGenerated: true
         };
         
-        setDynamicPlaybooks(prev => [newPlaybook, ...prev]);
+        setGeneratedPlaybooks(prev => [newPlaybook, ...prev]);
       }
     } catch (error) {
       console.error('Error generating playbook:', error);
@@ -118,340 +171,31 @@ const PartnershipEngine = () => {
     }
   };
 
-  // PepsiCo Partnership Playbooks (Static Examples)
-  const partnershipPlaybooks = [
-    {
-      id: 1,
-      title: 'Local Restaurant Value Services',
-      category: 'Foodservice',
-      description: 'AI-powered value-added services for mid-size restaurant chains (50-150 outlets) including SRP tools and dynamic pricing',
-      steps: 8,
-      duration: '4-6 weeks',
-      successRate: '89%',
-      brands: ['Pepsi', 'Lay\'s', 'Gatorade'],
-      priority: 'High - Most Profitable Channel',
-      revenueImpact: '€3-7M annually',
-      keyTactics: [
-        'AI-driven lead generation and prioritization',
-        'Dynamic pricing optimization tools',
-        'Traffic conversion from third-party ordering',
-        'Churn reduction and retention strategies'
-      ]
-    },
-    {
-      id: 2,
-      title: 'Immersive Food Experience',
-      category: 'Theme Parks',
-      description: 'Doritos Loaded-style culinary activations with full story-world integration and co-creation partnerships',
-      steps: 12,
-      duration: '8-12 months',
-      successRate: '94%',
-      brands: ['Doritos', 'Cheetos', 'Flamin\' Hot'],
-      priority: 'Strategic - Brand Building',
-      revenueImpact: '€5-15M+ per activation',
-      keyTactics: [
-        'Storytelling integration with fictional characters',
-        'Authentic theming and period props',
-        'Co-creation with design and innovation teams',
-        'Permanent installation vs temporary activation'
-      ]
-    },
+  const handleViewPlaybook = (playbook) => {
+    setSelectedPlaybook(playbook);
+    setModalOpen(true);
+  };
 
-  ];
-
-
-
-  // AI Chat Suggestions
-  const chatSuggestions = [
-    'Create a concert festival partnership playbook',
-    'Generate gaming esports partnership strategy',
-    'Analyze theme park collaboration opportunities'
-  ];
-
-  const handleSendMessage = async () => {
-    if (!chatMessage.trim()) return;
-    
-    setChatHistory(prev => [...prev, {
-      type: 'user',
-      message: chatMessage
-    }]);
-    
-    // Show loading message
-    setChatHistory(prev => [...prev, {
-      type: 'assistant',
-      message: 'Generating your partnership playbook... 🚀'
-    }]);
-    
-    try {
-      // Call the real backend API
-      const response = await fetch('https://afhplatform-production.up.railway.app/api/playbooks/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          industry: 'general',
-          target: chatMessage,
-          region: 'Global'
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.playbook) {
-        const playbook = data.playbook;
-        const responseMessage = `✅ **${playbook.title}**\n\n` +
-          `📊 **Success Rate:** ${playbook.successRate}%\n` +
-          `💰 **Revenue Potential:** ${playbook.averageRevenue}\n` +
-          `⏱️ **Timeline:** ${playbook.timeToClose}\n\n` +
-          `**Key Steps:**\n` +
-          playbook.steps.slice(0, 3).map((step, i) => 
-            `${i + 1}. ${step.title} (${step.duration})`
-          ).join('\n') +
-          `\n\n🎯 This playbook includes ${playbook.steps.length} detailed steps with actionable insights for ${playbook.targetAudience}.`;
-        
-        setChatHistory(prev => {
-          const newHistory = [...prev];
-          newHistory[newHistory.length - 1] = {
-            type: 'assistant',
-            message: responseMessage
-          };
-          return newHistory;
-        });
-      } else {
-        throw new Error('No playbook generated');
-      }
-    } catch (error) {
-      console.error('Error generating playbook:', error);
-      setChatHistory(prev => {
-        const newHistory = [...prev];
-        newHistory[newHistory.length - 1] = {
-          type: 'assistant',
-          message: 'I apologize, but I\'m having trouble connecting to the playbook generation service right now. Please try again in a moment, or contact support if the issue persists.'
-        };
-        return newHistory;
-      });
+  const handleExportPlaybook = (format) => {
+    if (selectedPlaybook) {
+      console.log(`Exporting ${selectedPlaybook.title} as ${format}`);
+      // Implementation for PDF/PPT export would go here
     }
-    
-    setChatMessage('');
   };
 
-  const PlaybookCard = ({ playbook }) => (
-    <Card sx={{ 
-      height: '100%',
-      transition: 'all 0.3s ease-in-out',
-      '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 32px rgba(0, 51, 102, 0.15)',
-      }
-    }}>
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {playbook.title}
-            </Typography>
-            <Chip 
-              label={playbook.category}
-              size="small"
-              sx={{ 
-                bgcolor: `${pepsicoBrandColors.secondary.orange}20`,
-                color: pepsicoBrandColors.secondary.orange,
-                fontWeight: 500
-              }}
-            />
-          </Box>
-          <Avatar sx={{ 
-            bgcolor: pepsicoBrandColors.primary.navy,
-            width: 40,
-            height: 40
-          }}>
-            <PlayArrow />
-          </Avatar>
-        </Box>
-
-        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-          {playbook.description}
-        </Typography>
-
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={4}>
-            <Typography variant="caption" color="text.secondary">Steps</Typography>
-            <Typography variant="h6" fontWeight={600}>{playbook.steps}</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography variant="caption" color="text.secondary">Duration</Typography>
-            <Typography variant="body2" fontWeight={500}>{playbook.duration}</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography variant="caption" color="text.secondary">Success Rate</Typography>
-            <Typography variant="body2" fontWeight={600} color="success.main">
-              {playbook.successRate}
-            </Typography>
-          </Grid>
-        </Grid>
-
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" fontWeight={500} sx={{ mb: 1 }}>
-            Key Brands:
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {playbook.brands.map((brand, index) => (
-              <Chip 
-                key={index}
-                label={brand}
-                size="small"
-                variant="outlined"
-                sx={{ fontSize: '0.75rem' }}
-              />
-            ))}
-          </Box>
-        </Box>
-        
-        {/* Show priority and revenue impact for real AFH playbooks */}
-        {playbook.priority && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5, color: pepsicoBrandColors.primary.navy }}>
-              Priority: {playbook.priority}
-            </Typography>
-            <Typography variant="body2" fontWeight={500} sx={{ color: pepsicoBrandColors.secondary.green }}>
-              Revenue Impact: {playbook.revenueImpact}
-            </Typography>
-          </Box>
-        )}
-
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<PlayArrow />}
-          sx={{ 
-            background: `linear-gradient(135deg, ${pepsicoBrandColors.primary.navy} 0%, ${pepsicoBrandColors.primary.blue} 100%)`,
-          }}
-          onClick={() => {
-            if (playbook.isGenerated && playbook.fullPlaybook) {
-              handleViewPlaybook(playbook.fullPlaybook);
-            }
-          }}
-        >
-          {playbook.isGenerated ? 'View Full Playbook' : 'Launch Playbook'}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-
-  const CampaignCard = ({ campaign }) => {
-    const getStatusColor = (status) => {
-      switch (status) {
-        case 'Active': return pepsicoBrandColors.secondary.green;
-        case 'Planning': return pepsicoBrandColors.secondary.orange;
-        case 'Completed': return pepsicoBrandColors.primary.blue;
-        default: return pepsicoBrandColors.neutral.darkGray;
-      }
-    };
-
-    return (
-      <Card>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                {campaign.name}
-              </Typography>
-              <Chip 
-                label={campaign.status}
-                size="small"
-                sx={{ 
-                  bgcolor: `${getStatusColor(campaign.status)}20`,
-                  color: getStatusColor(campaign.status),
-                  fontWeight: 500
-                }}
-              />
-            </Box>
-            <Typography variant="h6" fontWeight={600} color="primary">
-              {campaign.responseRate}
-            </Typography>
-          </Box>
-
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={3}>
-              <Typography variant="caption" color="text.secondary">Prospects</Typography>
-              <Typography variant="h6" fontWeight={600}>{campaign.prospects}</Typography>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="caption" color="text.secondary">Responses</Typography>
-              <Typography variant="h6" fontWeight={600}>{campaign.responses}</Typography>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="caption" color="text.secondary">Meetings</Typography>
-              <Typography variant="h6" fontWeight={600}>{campaign.meetings}</Typography>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="caption" color="text.secondary">Deals</Typography>
-              <Typography variant="h6" fontWeight={600} color="success.main">
-                {campaign.deals}
-              </Typography>
-            </Grid>
-          </Grid>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {campaign.nextAction}
-          </Typography>
-
-          <LinearProgress 
-            variant="determinate" 
-            value={(campaign.responses / campaign.prospects) * 100} 
-            sx={{ 
-              height: 6,
-              borderRadius: 3,
-              bgcolor: `${pepsicoBrandColors.primary.navy}20`,
-              '& .MuiLinearProgress-bar': {
-                bgcolor: pepsicoBrandColors.primary.navy,
-                borderRadius: 3,
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
-    );
-  };
+  const allPlaybooks = [...generatedPlaybooks, ...staticPlaybooks];
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ 
-          fontWeight: 700,
-          color: pepsicoBrandColors.primary.navy,
-          mb: 1
-        }}>
-          Activate Partnerships
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          AI-powered partnership activation with smart playbooks and automated outreach
-        </Typography>
-      </Box>
+      <Typography variant="h4" fontWeight={700} sx={{ mb: 1, color: pepsicoBrandColors.primary.navy }}>
+        Activate Partnerships
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        AI-powered partnership activation with smart playbooks and automated outreach
+      </Typography>
 
-      {/* Tabs */}
-      <Box sx={{ mb: 3 }}>
-        <Tabs 
-          value={selectedTab} 
-          onChange={(e, newValue) => setSelectedTab(newValue)}
-          sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '1rem',
-            },
-            '& .Mui-selected': {
-              color: `${pepsicoBrandColors.primary.navy} !important`,
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: pepsicoBrandColors.primary.navy,
-              height: 3,
-              borderRadius: 2,
-            },
-          }}
-        >
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={selectedTab} onChange={handleTabChange}>
           <Tab label="Partnership Playbooks" />
           <Tab label="AI Assistant" />
           <Tab label="Outreach Campaigns" />
@@ -460,6 +204,168 @@ const PartnershipEngine = () => {
 
       {/* Partnership Playbooks Tab */}
       {selectedTab === 0 && (
+        <Box>
+          {/* Quick Generate Section */}
+          <Card sx={{ mb: 3, bgcolor: `${pepsicoBrandColors.primary.navy}10` }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                🚀 Generate New Partnership Playbook
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('concerts', 'Tomorrowland Festival - Immersive Food Experience', 'Europe')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎵 Concert Partnership
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('gaming', 'T1 Esports - Gaming Arena Partnership', 'Asia')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎮 Gaming Partnership
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('petrol', 'Shell Premium Stations - Travel Convenience', 'Europe')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    ⛽ Petrol Retail
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => generateNewPlaybook('themepark', 'Europa-Park - Immersive Brand Experience', 'Europe')}
+                    disabled={isGeneratingPlaybook}
+                    sx={{ 
+                      borderColor: pepsicoBrandColors.primary.navy,
+                      color: pepsicoBrandColors.primary.navy,
+                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
+                    }}
+                  >
+                    🎢 Theme Park
+                  </Button>
+                </Grid>
+              </Grid>
+              {isGeneratingPlaybook && (
+                <Box sx={{ mt: 2 }}>
+                  <LinearProgress />
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                    Generating AI-powered partnership playbook...
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Playbook Cards */}
+          <Grid container spacing={3}>
+            {allPlaybooks.map((playbook) => (
+              <Grid item xs={12} md={6} key={playbook.id}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Typography variant="h6" fontWeight={600}>
+                        {playbook.title}
+                      </Typography>
+                      <Chip 
+                        label={playbook.isGenerated ? "AI Generated" : playbook.category}
+                        color={playbook.isGenerated ? "success" : "primary"}
+                        size="small"
+                      />
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {playbook.description}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                      <Box>
+                        <Typography variant="h6" fontWeight={600}>
+                          {playbook.steps}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Steps
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={600}>
+                          {playbook.duration}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Duration
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={600} color="success.main">
+                          {playbook.successRate}%
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Success Rate
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                        Key Brands:
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {playbook.brands.map((brand, index) => (
+                          <Chip key={index} label={brand} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                    </Box>
+                  </CardContent>
+                  
+                  <Box sx={{ p: 2, pt: 0 }}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handleViewPlaybook(playbook)}
+                      sx={{ 
+                        bgcolor: pepsicoBrandColors.primary.navy,
+                        '&:hover': { bgcolor: pepsicoBrandColors.primary.blue }
+                      }}
+                    >
+                      View Full Playbook
+                    </Button>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
+      {/* AI Assistant Tab */}
+      {selectedTab === 1 && (
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
             <Card sx={{ height: 500 }}>
@@ -534,8 +440,15 @@ const PartnershipEngine = () => {
                     key={index}
                     fullWidth
                     variant="outlined"
-                    sx={{ mb: 1, textAlign: 'left', justifyContent: 'flex-start' }}
                     onClick={() => setChatMessage(suggestion)}
+                    sx={{ 
+                      mb: 1,
+                      justifyContent: 'flex-start',
+                      textAlign: 'left',
+                      borderColor: pepsicoBrandColors.neutral.mediumGray,
+                      color: 'text.primary',
+                      '&:hover': { bgcolor: pepsicoBrandColors.neutral.lightGray }
+                    }}
                   >
                     {suggestion}
                   </Button>
@@ -546,411 +459,161 @@ const PartnershipEngine = () => {
         </Grid>
       )}
 
-      {/* AI Assistant Tab */}
-      {selectedTab === 1 && (
+      {/* Outreach Campaigns Tab */}
+      {selectedTab === 2 && (
         <Box>
-          {/* Quick Generate Section */}
-          <Card sx={{ mb: 3, bgcolor: `${pepsicoBrandColors.primary.navy}10` }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                🚀 Generate New Partnership Playbook
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => generateNewPlaybook('concerts', 'Tomorrowland Festival - Immersive Food Experience', 'Europe')}
-                    disabled={isGeneratingPlaybook}
-                    sx={{ 
-                      borderColor: pepsicoBrandColors.primary.navy,
-                      color: pepsicoBrandColors.primary.navy,
-                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
-                    }}
-                  >
-                    🎵 Concert Partnership
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => generateNewPlaybook('gaming', 'T1 Esports - Gaming Arena Partnership', 'Asia')}
-                    disabled={isGeneratingPlaybook}
-                    sx={{ 
-                      borderColor: pepsicoBrandColors.primary.navy,
-                      color: pepsicoBrandColors.primary.navy,
-                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
-                    }}
-                  >
-                    🎮 Gaming Partnership
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => generateNewPlaybook('petrol_retail', 'Shell Highway Services - Premium Convenience', 'EMEA')}
-                    disabled={isGeneratingPlaybook}
-                    sx={{ 
-                      borderColor: pepsicoBrandColors.primary.navy,
-                      color: pepsicoBrandColors.primary.navy,
-                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
-                    }}
-                  >
-                    ⛽ Petrol Retail
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => generateNewPlaybook('theme_park', 'Europa-Park Doritos Loaded Experience', 'Europe')}
-                    disabled={isGeneratingPlaybook}
-                    sx={{ 
-                      borderColor: pepsicoBrandColors.primary.navy,
-                      color: pepsicoBrandColors.primary.navy,
-                      '&:hover': { bgcolor: `${pepsicoBrandColors.primary.navy}10` }
-                    }}
-                  >
-                    🎢 Theme Park
-                  </Button>
-                </Grid>
-              </Grid>
-              {isGeneratingPlaybook && (
-                <Box sx={{ mt: 2 }}>
-                  <LinearProgress sx={{ 
-                    bgcolor: `${pepsicoBrandColors.primary.navy}20`,
-                    '& .MuiLinearProgress-bar': { bgcolor: pepsicoBrandColors.primary.navy }
-                  }} />
-                  <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-                    Generating AI-powered partnership playbook...
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-
-          <Grid container spacing={3}>
-            {/* Dynamic AI-Generated Playbooks */}
-            {dynamicPlaybooks.map((playbook) => (
-              <Grid item xs={12} md={6} lg={4} key={playbook.id}>
-                <Box sx={{ position: 'relative' }}>
-                  <Chip 
-                    label="AI Generated" 
-                    size="small" 
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
-                      zIndex: 1,
-                      bgcolor: pepsicoBrandColors.secondary.green,
-                      color: 'white',
-                      fontWeight: 600
-                    }} 
-                  />
-                  <PlaybookCard playbook={playbook} />
-                </Box>
-              </Grid>
-            ))}
-            
-            {/* Static Template Playbooks */}
-            {partnershipPlaybooks.map((playbook) => (
-              <Grid item xs={12} md={6} lg={4} key={playbook.id}>
-                <PlaybookCard playbook={playbook} />
-              </Grid>
-            ))}
-          </Grid>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Outreach Campaigns
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Automated outreach campaign functionality coming soon...
+          </Typography>
         </Box>
       )}
 
-
-      
       {/* Playbook Detail Modal */}
       <Dialog
-        open={showPlaybookModal}
-        onClose={handleClosePlaybookModal}
-        maxWidth="lg"
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            maxHeight: '90vh'
-          }
-        }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          bgcolor: `${pepsicoBrandColors.primary.navy}10`,
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}>
-          <Box>
-            <Typography variant="h5" fontWeight={600}>
-              {selectedPlaybook?.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              AI-Generated Partnership Strategy
-            </Typography>
-          </Box>
-          <IconButton onClick={handleClosePlaybookModal}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        
-        <DialogContent sx={{ p: 0 }}>
-          {selectedPlaybook && (
-            <Box>
-              {/* Overview Section */}
-              <Box sx={{ p: 3, bgcolor: `${pepsicoBrandColors.primary.navy}05` }}>
+        {selectedPlaybook && (
+          <>
+            <DialogTitle sx={{ 
+              bgcolor: pepsicoBrandColors.primary.navy, 
+              color: 'white',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Typography variant="h6" fontWeight={600}>
+                {selectedPlaybook.title}
+              </Typography>
+              <IconButton 
+                onClick={() => setModalOpen(false)}
+                sx={{ color: 'white' }}
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
+            
+            <DialogContent sx={{ p: 3 }}>
+              <Box sx={{ mb: 3 }}>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={3}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        bgcolor: pepsicoBrandColors.secondary.green,
-                        width: 60,
-                        height: 60,
-                        mx: 'auto',
-                        mb: 1
-                      }}>
-                        <TrendingUpIcon sx={{ fontSize: 30 }} />
-                      </Avatar>
-                      <Typography variant="h4" fontWeight={600} color="success.main">
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                      <Typography variant="h4" fontWeight={600} color="success.dark">
                         {selectedPlaybook.successRate}%
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="success.dark">
                         Success Rate
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} md={3}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        bgcolor: pepsicoBrandColors.secondary.orange,
-                        width: 60,
-                        height: 60,
-                        mx: 'auto',
-                        mb: 1
-                      }}>
-                        <AttachMoney sx={{ fontSize: 30 }} />
-                      </Avatar>
-                      <Typography variant="h6" fontWeight={600}>
-                        {selectedPlaybook.averageRevenue}
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                      <Typography variant="h4" fontWeight={600} color="primary.dark">
+                        €2-8M
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="primary.dark">
                         Revenue Potential
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} md={3}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        bgcolor: pepsicoBrandColors.primary.blue,
-                        width: 60,
-                        height: 60,
-                        mx: 'auto',
-                        mb: 1
-                      }}>
-                        <AccessTime sx={{ fontSize: 30 }} />
-                      </Avatar>
-                      <Typography variant="h6" fontWeight={600}>
-                        {selectedPlaybook.timeToClose}
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                      <Typography variant="h4" fontWeight={600} color="warning.dark">
+                        {selectedPlaybook.duration}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="warning.dark">
                         Timeline
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} md={3}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        bgcolor: pepsicoBrandColors.primary.navy,
-                        width: 60,
-                        height: 60,
-                        mx: 'auto',
-                        mb: 1
-                      }}>
-                        <Business sx={{ fontSize: 30 }} />
-                      </Avatar>
-                      <Typography variant="h6" fontWeight={600}>
-                        {selectedPlaybook.steps?.length || 0}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Strategic Steps
                       </Typography>
                     </Box>
                   </Grid>
                 </Grid>
               </Box>
-              
-              {/* Target Audience */}
-              <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                  🎯 Target Audience
+
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                <strong>Target Audience:</strong> {selectedPlaybook.fullData?.targetAudience || `${selectedPlaybook.title} audience with high engagement potential`}
+              </Typography>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                  Key Brands:
                 </Typography>
-                <Typography variant="body1">
-                  {selectedPlaybook.targetAudience}
-                </Typography>
-              </Box>
-              
-              {/* Key Brands */}
-              <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                  🏷️ Key Brands
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {selectedPlaybook.keyBrands?.map((brand, index) => (
-                    <Chip 
-                      key={index}
-                      label={brand}
-                      sx={{ 
-                        bgcolor: `${pepsicoBrandColors.primary.navy}10`,
-                        color: pepsicoBrandColors.primary.navy,
-                        fontWeight: 500
-                      }}
-                    />
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {selectedPlaybook.brands.map((brand, index) => (
+                    <Chip key={index} label={brand} color="primary" />
                   ))}
                 </Box>
               </Box>
+
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                Strategic Implementation Steps:
+              </Typography>
               
-              {/* Strategic Steps */}
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-                  📋 Strategic Implementation Steps
-                </Typography>
-                
-                {selectedPlaybook.steps?.map((step, index) => (
-                  <Accordion 
-                    key={index}
-                    sx={{ 
-                      mb: 2,
-                      '&:before': { display: 'none' },
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      borderRadius: 2,
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <AccordionSummary
-                      expandIcon={<ExpandMore />}
-                      sx={{
-                        bgcolor: `${pepsicoBrandColors.primary.navy}05`,
-                        '&:hover': {
-                          bgcolor: `${pepsicoBrandColors.primary.navy}10`
-                        }
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                        <Avatar sx={{ 
-                          bgcolor: pepsicoBrandColors.primary.navy,
-                          width: 32,
-                          height: 32,
-                          fontSize: '0.875rem'
-                        }}>
-                          {step.stepNumber}
-                        </Avatar>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            {step.title}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Duration: {step.duration}
-                          </Typography>
-                        </Box>
-                      </Box>
+              {selectedPlaybook.fullData?.steps ? (
+                selectedPlaybook.fullData.steps.map((step, index) => (
+                  <Accordion key={index}>
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Typography fontWeight={600}>
+                        Step {index + 1}: {step.title}
+                      </Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ p: 3 }}>
-                      <Typography variant="body2" sx={{ mb: 2 }}>
+                    <AccordionDetails>
+                      <Typography variant="body2">
                         {step.description}
                       </Typography>
-                      
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                        Key Actions:
-                      </Typography>
-                      <List dense>
-                        {step.keyActions?.map((action, actionIndex) => (
-                          <ListItem key={actionIndex} sx={{ py: 0.5 }}>
-                            <ListItemText 
-                              primary={`• ${action}`}
-                              primaryTypographyProps={{ variant: 'body2' }}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                      
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, mt: 2 }}>
-                        Success Metrics:
-                      </Typography>
-                      <List dense>
-                        {step.successMetrics?.map((metric, metricIndex) => (
-                          <ListItem key={metricIndex} sx={{ py: 0.5 }}>
-                            <ListItemText 
-                              primary={`✓ ${metric}`}
-                              primaryTypographyProps={{ 
-                                variant: 'body2',
-                                color: 'success.main'
-                              }}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
                     </AccordionDetails>
                   </Accordion>
-                ))}
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider', justifyContent: 'space-between' }}>
-          <Button 
-            onClick={handleClosePlaybookModal}
-            variant="outlined"
-            sx={{ 
-              borderColor: pepsicoBrandColors.primary.navy,
-              color: pepsicoBrandColors.primary.navy
-            }}
-          >
-            Close
-          </Button>
-          
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button 
-              variant="outlined"
-              onClick={() => {
-                // Export as PDF functionality
-                console.log('Exporting as PDF...');
-                // Add PDF export logic here
-              }}
-              sx={{ 
-                borderColor: pepsicoBrandColors.secondary.red,
-                color: pepsicoBrandColors.secondary.red,
-                '&:hover': {
-                  bgcolor: `${pepsicoBrandColors.secondary.red}10`
-                }
-              }}
-            >
-              📄 Export PDF
-            </Button>
-            <Button 
-              variant="contained"
-              onClick={() => {
-                // Export as PPT functionality
-                console.log('Exporting as PPT...');
-                // Add PPT export logic here
-              }}
-              sx={{ 
-                background: `linear-gradient(135deg, ${pepsicoBrandColors.secondary.orange} 0%, ${pepsicoBrandColors.secondary.orange}CC 100%)`,
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${pepsicoBrandColors.secondary.orange}DD 0%, ${pepsicoBrandColors.secondary.orange}AA 100())`,
-                }
-              }}
-            >
-              📊 Export PPT
-            </Button>
-          </Box>
-        </DialogActions>
+                ))
+              ) : (
+                selectedPlaybook.keyInsights.map((insight, index) => (
+                  <Accordion key={index}>
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Typography fontWeight={600}>
+                        Step {index + 1}: {insight}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography variant="body2">
+                        Detailed implementation guidance for {insight.toLowerCase()}.
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+              )}
+            </DialogContent>
+            
+            <DialogActions sx={{ p: 3, gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<PictureAsPdf />}
+                onClick={() => handleExportPlaybook('PDF')}
+              >
+                Export PDF
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Slideshow />}
+                onClick={() => handleExportPlaybook('PPT')}
+              >
+                Export PPT
+              </Button>
+              <Button
+                variant="contained"
+                sx={{ 
+                  bgcolor: pepsicoBrandColors.primary.navy,
+                  '&:hover': { bgcolor: pepsicoBrandColors.primary.blue }
+                }}
+                onClick={() => setModalOpen(false)}
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
     </Box>
   );
