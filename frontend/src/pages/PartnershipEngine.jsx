@@ -249,7 +249,8 @@ const PartnershipEngine = () => {
           currentY += 15;
           
           selectedPlaybook.strategicSteps.forEach((step, index) => {
-            if (currentY > 250) {
+            // Check if we need a new page before adding step content
+            if (currentY > 240) {
               doc.addPage();
               currentY = 30;
             }
@@ -262,19 +263,43 @@ const PartnershipEngine = () => {
             doc.text(splitStepTitle, 20, currentY);
             currentY += (splitStepTitle.length * 5) + 5;
             
+            // Check for page break after title
+            if (currentY > 270) {
+              doc.addPage();
+              currentY = 30;
+            }
+            
             // Step description
             doc.setFont(undefined, 'normal');
             const splitDesc = doc.splitTextToSize(step.description, 165);
             doc.text(splitDesc, 25, currentY);
             currentY += (splitDesc.length * 5) + 5;
             
+            // Check for page break after description
+            if (currentY > 270) {
+              doc.addPage();
+              currentY = 30;
+            }
+            
             // Key Actions
             if (step.keyActions && step.keyActions.length > 0) {
+              // Check if we have space for Key Actions header
+              if (currentY > 265) {
+                doc.addPage();
+                currentY = 30;
+              }
+              
               doc.setFont(undefined, 'bold');
               doc.text('Key Actions:', 25, currentY);
               currentY += 7;
               doc.setFont(undefined, 'normal');
+              
               step.keyActions.forEach((action) => {
+                // Check for page break before each action
+                if (currentY > 270) {
+                  doc.addPage();
+                  currentY = 30;
+                }
                 const splitAction = doc.splitTextToSize(`• ${action}`, 160);
                 doc.text(splitAction, 30, currentY);
                 currentY += (splitAction.length * 4) + 2;
@@ -284,11 +309,23 @@ const PartnershipEngine = () => {
             
             // Success Metrics
             if (step.successMetrics && step.successMetrics.length > 0) {
+              // Check if we have space for Success Metrics header
+              if (currentY > 265) {
+                doc.addPage();
+                currentY = 30;
+              }
+              
               doc.setFont(undefined, 'bold');
               doc.text('Success Metrics:', 25, currentY);
               currentY += 7;
               doc.setFont(undefined, 'normal');
+              
               step.successMetrics.forEach((metric) => {
+                // Check for page break before each metric
+                if (currentY > 270) {
+                  doc.addPage();
+                  currentY = 30;
+                }
                 const splitMetric = doc.splitTextToSize(`• ${metric}`, 160);
                 doc.text(splitMetric, 30, currentY);
                 currentY += (splitMetric.length * 4) + 2;
@@ -347,36 +384,118 @@ const PartnershipEngine = () => {
               fontSize: 14, color: '666666'
             });
             stepSlide.addText(step.description, {
-              x: 1, y: 2.2, w: 8, h: 1.5,
+              x: 1, y: 2.2, w: 8, h: 1.2,
               fontSize: 12
             });
             
-            // Add key actions (all of them, not just first 3)
-            if (step.keyActions && step.keyActions.length > 0) {
-              stepSlide.addText('Key Actions:', {
-                x: 1, y: 4, w: 8, h: 0.5,
-                fontSize: 14, bold: true
-              });
-              step.keyActions.forEach((action, actionIndex) => {
-                stepSlide.addText(`• ${action}`, {
-                  x: 1.2, y: 4.5 + (actionIndex * 0.35), w: 7.5, h: 0.35,
-                  fontSize: 10
-                });
-              });
-            }
+            let currentY = 3.7; // Start after description
             
-            // Add success metrics
-            if (step.successMetrics && step.successMetrics.length > 0) {
-              const metricsStartY = 4.5 + (step.keyActions ? step.keyActions.length * 0.35 : 0) + 0.5;
+            // Add key actions with proper positioning
+            if (step.keyActions && step.keyActions.length > 0) {
+              // Check if we have space for key actions
+              const actionsNeeded = step.keyActions.length * 0.3 + 0.5; // Space needed for actions
+              const metricsNeeded = step.successMetrics ? step.successMetrics.length * 0.3 + 0.5 : 0;
+              const totalNeeded = actionsNeeded + metricsNeeded;
+              
+              if (currentY + totalNeeded > 7) {
+                // Create a continuation slide for actions and metrics
+                const continuationSlide = pptx.addSlide();
+                continuationSlide.addText(`Step ${step.stepNumber}: ${step.title} (continued)`, {
+                  x: 1, y: 0.5, w: 8, h: 1,
+                  fontSize: 18, bold: true, color: '004B87'
+                });
+                currentY = 1.5;
+                
+                // Add key actions on continuation slide
+                continuationSlide.addText('Key Actions:', {
+                  x: 1, y: currentY, w: 8, h: 0.4,
+                  fontSize: 14, bold: true
+                });
+                currentY += 0.5;
+                
+                step.keyActions.forEach((action, actionIndex) => {
+                  if (currentY < 6.5) { // Ensure we don't overflow
+                    continuationSlide.addText(`• ${action}`, {
+                      x: 1.2, y: currentY, w: 7.5, h: 0.3,
+                      fontSize: 10
+                    });
+                    currentY += 0.3;
+                  }
+                });
+                
+                // Add success metrics on continuation slide
+                if (step.successMetrics && step.successMetrics.length > 0 && currentY < 6) {
+                  currentY += 0.3;
+                  continuationSlide.addText('Success Metrics:', {
+                    x: 1, y: currentY, w: 8, h: 0.4,
+                    fontSize: 14, bold: true
+                  });
+                  currentY += 0.5;
+                  
+                  step.successMetrics.forEach((metric, metricIndex) => {
+                    if (currentY < 6.5) { // Ensure we don't overflow
+                      continuationSlide.addText(`• ${metric}`, {
+                        x: 1.2, y: currentY, w: 7.5, h: 0.3,
+                        fontSize: 10
+                      });
+                      currentY += 0.3;
+                    }
+                  });
+                }
+              } else {
+                // Add content on the same slide
+                stepSlide.addText('Key Actions:', {
+                  x: 1, y: currentY, w: 8, h: 0.4,
+                  fontSize: 14, bold: true
+                });
+                currentY += 0.5;
+                
+                step.keyActions.forEach((action, actionIndex) => {
+                  if (currentY < 6.5) {
+                    stepSlide.addText(`• ${action}`, {
+                      x: 1.2, y: currentY, w: 7.5, h: 0.3,
+                      fontSize: 10
+                    });
+                    currentY += 0.3;
+                  }
+                });
+                
+                // Add success metrics
+                if (step.successMetrics && step.successMetrics.length > 0 && currentY < 6) {
+                  currentY += 0.3;
+                  stepSlide.addText('Success Metrics:', {
+                    x: 1, y: currentY, w: 8, h: 0.4,
+                    fontSize: 14, bold: true
+                  });
+                  currentY += 0.5;
+                  
+                  step.successMetrics.forEach((metric, metricIndex) => {
+                    if (currentY < 6.5) {
+                      stepSlide.addText(`• ${metric}`, {
+                        x: 1.2, y: currentY, w: 7.5, h: 0.3,
+                        fontSize: 10
+                      });
+                      currentY += 0.3;
+                    }
+                  });
+                }
+              }
+            } else if (step.successMetrics && step.successMetrics.length > 0) {
+              // Only success metrics, no key actions
               stepSlide.addText('Success Metrics:', {
-                x: 1, y: metricsStartY, w: 8, h: 0.5,
+                x: 1, y: currentY, w: 8, h: 0.4,
                 fontSize: 14, bold: true
               });
+              currentY += 0.5;
+              
               step.successMetrics.forEach((metric, metricIndex) => {
-                stepSlide.addText(`• ${metric}`, {
-                  x: 1.2, y: metricsStartY + 0.5 + (metricIndex * 0.35), w: 7.5, h: 0.35,
-                  fontSize: 10
-                });
+                if (currentY < 6.5) {
+                  stepSlide.addText(`• ${metric}`, {
+                    x: 1.2, y: currentY, w: 7.5, h: 0.3,
+                    fontSize: 10
+                  });
+                  currentY += 0.3;
+                }
               });
             }
           });
