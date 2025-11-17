@@ -209,43 +209,93 @@ const PartnershipEngine = () => {
         const { jsPDF } = await import('jspdf');
         const doc = new jsPDF();
         
-        // Add title
+        // Add title with proper text wrapping
         doc.setFontSize(20);
-        doc.text(selectedPlaybook.title, 20, 30);
+        const splitTitle = doc.splitTextToSize(selectedPlaybook.title, 170);
+        doc.text(splitTitle, 20, 30);
+        let currentY = 30 + (splitTitle.length * 7);
         
         // Add category
         doc.setFontSize(14);
-        doc.text(`Category: ${selectedPlaybook.category}`, 20, 50);
+        currentY += 10;
+        doc.text(`Category: ${selectedPlaybook.category}`, 20, currentY);
         
         // Add description
         doc.setFontSize(12);
+        currentY += 10;
         const splitDescription = doc.splitTextToSize(selectedPlaybook.description, 170);
-        doc.text(splitDescription, 20, 70);
+        doc.text(splitDescription, 20, currentY);
+        currentY += (splitDescription.length * 5) + 10;
         
         // Add metrics
-        doc.text(`Steps: ${selectedPlaybook.steps} | Duration: ${selectedPlaybook.duration} | Success Rate: ${selectedPlaybook.successRate}%`, 20, 100);
-        doc.text(`Revenue Potential: ${selectedPlaybook.averageRevenue}`, 20, 110);
+        doc.text(`Steps: ${selectedPlaybook.steps} | Duration: ${selectedPlaybook.duration} | Success Rate: ${selectedPlaybook.successRate}%`, 20, currentY);
+        currentY += 10;
+        doc.text(`Revenue Potential: ${selectedPlaybook.averageRevenue}`, 20, currentY);
+        currentY += 10;
         
         // Add target audience
-        doc.text(`Target Audience: ${selectedPlaybook.targetAudience}`, 20, 125);
+        const splitAudience = doc.splitTextToSize(`Target Audience: ${selectedPlaybook.targetAudience}`, 170);
+        doc.text(splitAudience, 20, currentY);
+        currentY += (splitAudience.length * 5) + 10;
         
         // Add brands
-        doc.text(`Key Brands: ${selectedPlaybook.brands.join(', ')}`, 20, 140);
+        doc.text(`Key Brands: ${selectedPlaybook.brands.join(', ')}`, 20, currentY);
+        currentY += 15;
         
         // Add strategic steps if available
         if (selectedPlaybook.strategicSteps && selectedPlaybook.strategicSteps.length > 0) {
-          doc.text('Strategic Implementation Steps:', 20, 160);
-          let yPosition = 175;
+          doc.setFontSize(14);
+          doc.text('Strategic Implementation Steps:', 20, currentY);
+          currentY += 15;
+          
           selectedPlaybook.strategicSteps.forEach((step, index) => {
-            if (yPosition > 250) {
+            if (currentY > 250) {
               doc.addPage();
-              yPosition = 30;
+              currentY = 30;
             }
-            doc.text(`${step.stepNumber}. ${step.title} (${step.duration})`, 20, yPosition);
-            yPosition += 10;
-            const splitDesc = doc.splitTextToSize(step.description, 170);
-            doc.text(splitDesc, 25, yPosition);
-            yPosition += splitDesc.length * 5 + 10;
+            
+            // Step title
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            const stepTitle = `${step.stepNumber}. ${step.title} (${step.duration})`;
+            const splitStepTitle = doc.splitTextToSize(stepTitle, 170);
+            doc.text(splitStepTitle, 20, currentY);
+            currentY += (splitStepTitle.length * 5) + 5;
+            
+            // Step description
+            doc.setFont(undefined, 'normal');
+            const splitDesc = doc.splitTextToSize(step.description, 165);
+            doc.text(splitDesc, 25, currentY);
+            currentY += (splitDesc.length * 5) + 5;
+            
+            // Key Actions
+            if (step.keyActions && step.keyActions.length > 0) {
+              doc.setFont(undefined, 'bold');
+              doc.text('Key Actions:', 25, currentY);
+              currentY += 7;
+              doc.setFont(undefined, 'normal');
+              step.keyActions.forEach((action) => {
+                const splitAction = doc.splitTextToSize(`• ${action}`, 160);
+                doc.text(splitAction, 30, currentY);
+                currentY += (splitAction.length * 4) + 2;
+              });
+              currentY += 3;
+            }
+            
+            // Success Metrics
+            if (step.successMetrics && step.successMetrics.length > 0) {
+              doc.setFont(undefined, 'bold');
+              doc.text('Success Metrics:', 25, currentY);
+              currentY += 7;
+              doc.setFont(undefined, 'normal');
+              step.successMetrics.forEach((metric) => {
+                const splitMetric = doc.splitTextToSize(`• ${metric}`, 160);
+                doc.text(splitMetric, 30, currentY);
+                currentY += (splitMetric.length * 4) + 2;
+              });
+            }
+            
+            currentY += 10; // Space between steps
           });
         }
         
@@ -301,16 +351,31 @@ const PartnershipEngine = () => {
               fontSize: 12
             });
             
-            // Add key actions
+            // Add key actions (all of them, not just first 3)
             if (step.keyActions && step.keyActions.length > 0) {
               stepSlide.addText('Key Actions:', {
                 x: 1, y: 4, w: 8, h: 0.5,
                 fontSize: 14, bold: true
               });
-              step.keyActions.slice(0, 3).forEach((action, actionIndex) => {
+              step.keyActions.forEach((action, actionIndex) => {
                 stepSlide.addText(`• ${action}`, {
-                  x: 1.2, y: 4.5 + (actionIndex * 0.4), w: 7.5, h: 0.4,
-                  fontSize: 11
+                  x: 1.2, y: 4.5 + (actionIndex * 0.35), w: 7.5, h: 0.35,
+                  fontSize: 10
+                });
+              });
+            }
+            
+            // Add success metrics
+            if (step.successMetrics && step.successMetrics.length > 0) {
+              const metricsStartY = 4.5 + (step.keyActions ? step.keyActions.length * 0.35 : 0) + 0.5;
+              stepSlide.addText('Success Metrics:', {
+                x: 1, y: metricsStartY, w: 8, h: 0.5,
+                fontSize: 14, bold: true
+              });
+              step.successMetrics.forEach((metric, metricIndex) => {
+                stepSlide.addText(`• ${metric}`, {
+                  x: 1.2, y: metricsStartY + 0.5 + (metricIndex * 0.35), w: 7.5, h: 0.35,
+                  fontSize: 10
                 });
               });
             }
