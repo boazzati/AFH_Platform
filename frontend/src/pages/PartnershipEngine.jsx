@@ -141,8 +141,8 @@ const PartnershipEngine = () => {
         },
         body: JSON.stringify({
           industry: type,
-          partnerName: title,
-          region: region
+          region: region,
+          target: title
         }),
       });
 
