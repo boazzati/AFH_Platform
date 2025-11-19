@@ -19,33 +19,67 @@ console.log('Environment:', process.env.NODE_ENV || 'development');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// CORS configuration
+// Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       'https://afhapp.netlify.app',
+      'https://deploy-preview-*--afhapp.netlify.app',
       'http://localhost:3000',
-      'http://localhost:3001'
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173'
     ];
     
-    if (!origin || allowedOrigins.includes(origin)) {
-      console.log('🌐 CORS request from origin:', origin || 'same-origin');
-      console.log('✅ CORS: Origin allowed');
-      callback(null, true);
-    } else {
-      console.log('❌ CORS: Origin blocked:', origin);
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) {
+      console.log('🌐 CORS request from same-origin or no origin');
+      console.log('✅ CORS: No origin - allowed');
+      return callback(null, true);
     }
+    
+    // Check exact matches
+    if (allowedOrigins.includes(origin)) {
+      console.log('🌐 CORS request from origin:', origin);
+      console.log('✅ CORS: Origin allowed (exact match)');
+      return callback(null, true);
+    }
+    
+    // Check Netlify deploy previews (wildcard pattern)
+    if (origin.includes('netlify.app') && origin.includes('afhapp')) {
+      console.log('🌐 CORS request from Netlify preview:', origin);
+      console.log('✅ CORS: Netlify preview allowed');
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS: Origin blocked:', origin);
+    console.log('Allowed origins:', allowedOrigins);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  maxAge: 86400 // 24 hours
 };
 
 app.use(cors(corsOptions));
 
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
 console.log('✅ Express loaded');
 console.log('✅ Express app created');
+console.log('✅ Enhanced CORS configured');
 console.log('✅ Middleware configured');
 
 // MongoDB connection (optional - will work without it)
